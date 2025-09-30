@@ -1,66 +1,53 @@
 <?php
-// Fehleranzeige aktivieren
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Zugriffsschutz (optional)
-if (!defined('IN_SCRIPT')) {
-    define('IN_SCRIPT', 1);
-}
-
-// Konfiguration laden
 require_once(__DIR__ . '/../config.php');
-//echo "<p>✅ config.php geladen</p>";
 
-// DB-Verbindung herstellen
 $conn = get_db_connection();
-//echo "<p>✅ DB-Verbindung erfolgreich</p>";
 
-// Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-//echo "<p>Tabellenname: <strong>$table</strong></p>";
 
-// SQL-Befehl
 $sql = "SELECT * FROM $table ORDER BY id DESC LIMIT 10";
-//echo "<pre>SQL: $sql</pre>";
-
-// Query ausführen
 $result = mysqli_query($conn, $sql);
 
-if (!$result) {
-    echo "<p>❌ SQL-Fehler: " . mysqli_error($conn) . "</p>";
-    mysqli_close($conn);
-    exit;
-}
+if ($result && mysqli_num_rows($result) > 0) {
+    echo "<h3>Letzte Einträge:</h3>";
 
-// Einträge anzeigen
-echo "<h3>Letzte Einträge:</h3>";
-
-if (mysqli_num_rows($result) > 0) {
-    // Spaltennamen dynamisch ermitteln
-    $fields = array_keys(mysqli_fetch_assoc($result));
-    mysqli_data_seek($result, 0); // Zeiger zurücksetzen
+    // Manuell definierte Spaltenüberschriften (ohne ID)
+    $columnLabels = [
+        'datum'     => 'Datum',
+        'von'       => 'Von',
+        'bis'       => 'Bis',
+        'gruppe'    => 'Gruppe',
+        'leiter'    => 'Leiter',
+        'vermerk'   => 'Vermerk',
+        'bemerkung' => 'Bemerkung'
+    ];
 
     echo "<table border='1' cellpadding='5' cellspacing='0'>";
     echo "<tr>";
-    foreach ($fields as $field) {
-        echo "<th>$field</th>";
+    foreach ($columnLabels as $label) {
+        echo "<th>$label</th>";
     }
     echo "</tr>";
 
     while ($row = mysqli_fetch_assoc($result)) {
         echo "<tr>";
-        foreach ($fields as $field) {
-            echo "<td>{$row[$field]}</td>";
+        foreach ($columnLabels as $key => $label) {
+            $value = $row[$key];
+
+            // Zeitfelder kürzen auf HH:MM
+            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                $value = substr($value, 0, 5);
+            }
+
+            echo "<td>$value</td>";
         }
         echo "</tr>";
     }
 
     echo "</table>";
 } else {
-    echo "<p>⚠️ Keine Einträge gefunden.</p>";
+    echo "<p>Keine Einträge gefunden.</p>";
 }
 
 mysqli_close($conn);
