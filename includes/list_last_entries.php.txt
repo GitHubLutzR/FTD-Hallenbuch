@@ -1,27 +1,46 @@
 <?php
-require_once __DIR__ . '/../config.php';
+// Fehleranzeige aktivieren
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+// Zugriffsschutz (optional)
 if (!defined('IN_SCRIPT')) {
     define('IN_SCRIPT', 1);
 }
 
-require_once 'config.php';
+// Konfiguration laden
+require_once(__DIR__ . '/../config.php');
+echo "<p>✅ config.php geladen</p>";
 
+// DB-Verbindung herstellen
+$conn = get_db_connection();
+echo "<p>✅ DB-Verbindung erfolgreich</p>";
+
+// Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
-$conn = get_db_connection();
-
-$result = mysqli_query($conn, "
+// Daten abrufen
+$sql = "
     SELECT datum, von, bis, gruppe, leiter, vermerk, bemerkung
     FROM $table
     ORDER BY id DESC
     LIMIT 10
-");
+";
 
+$result = mysqli_query($conn, $sql);
+
+if (!$result) {
+    echo "<p>❌ Fehler beim Abrufen der Einträge: " . mysqli_error($conn) . "</p>";
+    mysqli_close($conn);
+    exit;
+}
+
+// Ausgabe
 echo "<h3>Letzte 10 Einträge:</h3>";
 
-if ($result && mysqli_num_rows($result) > 0) {
+if (mysqli_num_rows($result) > 0) {
     echo "<table border='1' cellpadding='5' cellspacing='0'>";
     echo "<tr><th>Datum</th><th>Von</th><th>Bis</th><th>Gruppe</th><th>Leiter</th><th>Vermerk</th><th>Bemerkung</th></tr>";
     while ($row = mysqli_fetch_assoc($result)) {
