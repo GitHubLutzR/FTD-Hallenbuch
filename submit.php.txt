@@ -1,5 +1,8 @@
 <?php
 require_once 'config.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 global $hesk_settings;
 
@@ -10,6 +13,10 @@ $gruppe    = $_POST['gruppe']    ?? '';
 $leiter    = $_POST['leiter']    ?? '';
 $vermerk   = $_POST['vermerk']   ?? '';
 $bemerkung = $_POST['bemerkung'] ?? '';
+
+echo "<pre>";
+print_r($_POST);
+echo "</pre>";
 
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
