@@ -49,4 +49,6 @@ if (!function_exists('get_db_connection')) {
         echo "<p>✅ Verbindung erfolgreich</p>";
         return $conn;
     }
+} else {
+        echo "<p>❌ DB-Verbindung fehlgeschlagen: falsche Funktion geladen. </p>";
 }
