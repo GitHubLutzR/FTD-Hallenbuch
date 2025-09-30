@@ -1,5 +1,5 @@
-i<?php
-require_once 'init.php';
+<?php
+require_once(__DIR__ . '/../init.php');
 check_admin(); // Nur für eingeloggte Admins
 
 echo "<h1>Admin-Menü</h1>";
