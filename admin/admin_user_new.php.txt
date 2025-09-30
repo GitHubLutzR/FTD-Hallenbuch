@@ -1,6 +1,12 @@
 <?php
-require_once 'init.php';
-check_admin();
+require_once(__DIR__ . '/../config.php');
+session_start();
+
+// Zugriffsschutz
+if (!isset($_SESSION['user'])) {
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);

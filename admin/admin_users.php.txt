@@ -1,5 +1,5 @@
 <?php
-require_once 'init.php';
+require_once(__DIR__ . '/../config.php');
 check_admin();
 
 $stmt = $pdo->query("SELECT id, username FROM hb_users ORDER BY username");
