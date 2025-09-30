@@ -9,6 +9,7 @@ try {
         INSERT INTO hallenbuch (datum, von, bis, gruppe, leiter, vermerk)
         VALUES (?, ?, ?, ?, ?, ?)
     ");
+    $bemerkung = isset($_POST['bemerkung']) ? trim($_POST['bemerkung']) : '';
 
     $stmt->execute([
         $_POST['datum'],
