@@ -8,13 +8,13 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
 ?>
 
 <form action="submit.php" method="post">
-    <label>Datum: <input type="date" name="datum" value="<?= date('Y-m-d') ?>" required></label>
-    <label>Von: <input type="time" name="von" required></label>
-    <label>Bis: <input type="time" name="bis" required></label>
-    <label>Gruppe: <input type="text" name="gruppe" required></label>
-    <label>Leiter: <input type="text" name="leiter" required></label>
-    <label>Vermerk: <input type="text" name="vermerk"></label>
-    <label>Bemerkung: <textarea name="bemerkung"></textarea></label>
+    <label>Datum: <input type="date" name="datum" value="<?= date('Y-m-d') ?>" required></label><BR>
+    <label>Von: <input type="time" name="von" required></label><BR>
+    <label>Bis: <input type="time" name="bis" required></label><BR>
+    <label>Gruppe: <input type="text" name="gruppe" required></label><BR>
+    <label>Leiter: <input type="text" name="leiter" required></label><BR>
+    <label>Vermerk: <input type="text" name="vermerk"></label><BR>
+    <label>Bemerkung: <textarea name="bemerkung"></textarea></label><BR>
     <button type="submit">Eintragen</button>
 </form>
 
