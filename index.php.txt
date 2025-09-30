@@ -4,7 +4,7 @@
 if (isset($_GET['success']) && $_GET['success'] == 1) {
     echo "<h2>✅ Eintrag erfolgreich gespeichert!</h2>";
     include 'includes/list_last_entries.php';
-#    echo '<p><a href="index.php">➕ Neuen Eintrag hinzufügen</a></p>';
+    echo '<p><a href="index.php">➕ Neuen Eintrag hinzufügen</a></p>';
 }
 ?>
 
