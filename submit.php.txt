@@ -1,6 +1,8 @@
 <?php
-define('IN_SCRIPT', 1); // notwendig für HESK-Konfig
+define('IN_SCRIPT', 1);
 require_once 'config.php';
+
+session_start(); // Session starten für Eintragszähler
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -8,6 +10,42 @@ error_reporting(E_ALL);
 
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
+
+// Eintragszähler initialisieren
+if (!isset($_SESSION['entry_count'])) {
+    $_SESSION['entry_count'] = 0;
+}
+if (!isset($_SESSION['block_until'])) {
+    $_SESSION['block_until'] = 0;
+}
+
+// Blockierung prüfen
+if ($_SESSION['block_until'] > time()) {
+    echo "<p>⛔ Zu viele Einträge. Bitte warte bis " . date('H:i:s', $_SESSION['block_until']) . ".</p>";
+    exit;
+}
+
+// Captcha ab 5 Einträgen (Platzhalter)
+if ($_SESSION['entry_count'] >= 5 && $_SESSION['entry_count'] < 10) {
+    if (empty($_POST['captcha']) || $_POST['captcha'] !== 'FTD') {
+        echo "<p>🔒 Bitte bestätige, dass du kein Bot bist.</p>";
+        echo "<form method='post'>";
+        foreach ($_POST as $key => $val) {
+            echo "<input type='hidden' name='$key' value='" . htmlspecialchars($val) . "'>";
+        }
+        echo "<label>Captcha (Gib 'FTD' ein): <input name='captcha'></label>";
+        echo "<button type='submit'>Bestätigen</button>";
+        echo "</form>";
+        exit;
+    }
+}
+
+// Blockierung ab 10 Einträgen
+if ($_SESSION['entry_count'] >= 10) {
+    $_SESSION['block_until'] = time() + (30 * 60); // 30 Minuten Sperre
+    echo "<p>⛔ Du hast zu viele Einträge gemacht. Bitte warte 30 Minuten.</p>";
+    exit;
+}
 
 // Eingaben aus dem Formular
 $datum     = $_POST['datum']     ?? '';
@@ -52,6 +90,7 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $leiter, $vermerk, $bemerkung);
 
 if (mysqli_stmt_execute($stmt)) {
+    $_SESSION['entry_count']++; // Zähler erhöhen
     mysqli_stmt_close($stmt);
     mysqli_close($conn);
     header("Location: index.php?success=1");
