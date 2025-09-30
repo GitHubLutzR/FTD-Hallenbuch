@@ -6,7 +6,7 @@ if (isset($_GET['success'])) {
 ?>
 
 <form action="submit.php" method="post">
-    <label>Datum: <input type="date" name="datum" required></label>
+    <label>Datum: <input type="date" name="datum" value="<?= date('Y-m-d') ?>" required></label>
     <label>Von: <input type="time" name="von" required></label>
     <label>Bis: <input type="time" name="bis" required></label>
     <label>Gruppe: <input type="text" name="gruppe" required></label>
