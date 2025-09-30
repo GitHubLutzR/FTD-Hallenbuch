@@ -1,7 +1,7 @@
 <?php
-require_once 'config.php';
+require_once 'includes/config.php';
+
 global $hesk_settings;
-$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
 $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
@@ -11,33 +11,39 @@ $leiter    = $_POST['leiter']    ?? '';
 $vermerk   = $_POST['vermerk']   ?? '';
 $bemerkung = $_POST['bemerkung'] ?? '';
 
-// Pflichtfeld-Validierung
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
     exit;
 }
 
-// Optional: Datum validieren
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $datum)) {
-    echo "<p>❌ Fehler: Ungültiges Datumsformat.</p>";
+$conn = mysqli_connect(
+    $hesk_settings['db_host'],
+    $hesk_settings['db_user'],
+    $hesk_settings['db_pass'],
+    $hesk_settings['db_name']
+);
+
+if (!$conn) {
+    echo "<p>❌ DB-Verbindung fehlgeschlagen: " . mysqli_connect_error() . "</p>";
     exit;
 }
 
-try {
-    $pdo = get_db_connection();
-    $stmt = $pdo->prepare("
-        INSERT INTO hallenbuch (datum, von, bis, gruppe, leiter, vermerk, bemerkung)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$datum, $von, $bis, $gruppe, $leiter, $vermerk, $bemerkung]);
+$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
-    // Optional: Redirect mit Status
+$stmt = mysqli_prepare($conn, "
+    INSERT INTO $table (datum, von, bis, gruppe, leiter, vermerk, bemerkung)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+");
+
+mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $leiter, $vermerk, $bemerkung);
+
+if (mysqli_stmt_execute($stmt)) {
     header("Location: index.php?success=1");
     exit;
-
-} catch (PDOException $e) {
-    error_log("Hallenbuch Fehler: " . $e->getMessage());
-    echo "<p>❌ Fehler beim Speichern: " . htmlspecialchars($e->getMessage()) . "</p>";
+} else {
+    echo "<p>❌ Fehler beim Speichern: " . mysqli_stmt_error($stmt) . "</p>";
 }
-?>
+
+mysqli_stmt_close($stmt);
+mysqli_close($conn);
 
