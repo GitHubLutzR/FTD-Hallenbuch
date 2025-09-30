@@ -1,5 +1,7 @@
 <?php
-require_once 'includes/db.php';
+require_once 'config.php';
+global $hesk_settings;
+$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
 $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
