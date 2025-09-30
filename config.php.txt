@@ -24,21 +24,23 @@ function get_db_connection(): PDO {
 
     return new PDO($dsn, $hesk_settings['db_user'], $hesk_settings['db_pass'], $options);
 }
-function get_db_connection(): mysqli {
-    global $hesk_settings;
+if (!function_exists('get_db_connection')) {
+    function get_db_connection(): mysqli {
+        global $hesk_settings;
 
-    $conn = mysqli_connect(
-        $hesk_settings['db_host'],
-        $hesk_settings['db_user'],
-        $hesk_settings['db_pass'],
-        $hesk_settings['db_name']
-    );
+        $conn = mysqli_connect(
+            $hesk_settings['db_host'],
+            $hesk_settings['db_user'],
+            $hesk_settings['db_pass'],
+            $hesk_settings['db_name']
+        );
 
-    if (!$conn) {
-        echo "<p>❌ DB-Verbindung fehlgeschlagen: " . mysqli_connect_error() . "</p>";
-        exit;
+        if (!$conn) {
+            echo "<p>❌ DB-Verbindung fehlgeschlagen: " . mysqli_connect_error() . "</p>";
+            exit;
+        }
+
+        return $conn;
     }
-
-    return $conn;
 }
 
