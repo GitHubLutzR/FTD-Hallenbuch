@@ -38,6 +38,9 @@ foreach ($stmt as $row) {
     echo "<option value=\"" . htmlspecialchars($row['name']) . "\">" . htmlspecialchars($row['name']) . "</option>";
 }
 ?>
+        <label for="bemerkung">Bemerkung:</label>
+        <textarea name="bemerkung" id="bemerkung" rows="4" cols="50"></textarea>
+
 </select>
 
 <?php #	    <input type="text" name="gruppe" required> ?>
