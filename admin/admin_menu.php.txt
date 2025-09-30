@@ -1,0 +1,15 @@
+i<?php
+require_once 'init.php';
+check_admin(); // Nur für eingeloggte Admins
+
+echo "<h1>Admin-Menü</h1>";
+echo "<ul>
+    <li><a href='admin/admin_users.php'>👥 Benutzerübersicht</a></li>
+    <li><a href='admin/admin_user_new.php'>➕ Benutzer anlegen</a></li>
+    <li><a href='admin/admin_user_edit.php'>✏️ Benutzer bearbeiten (manuelle ID nötig)</a></li>
+    <li><a href='admin/admin_user_password.php'>🔑 Passwort setzen/zurücksetzen (manuelle ID nötig)</a></li>
+    <li><a href='admin/admin_user_delete.php'>🗑️ Benutzer löschen (manuelle ID nötig)</a></li>
+    <li><a href='admin/admin_logout.php'>🚪 Logout</a></li>
+</ul>";
+?>
+

@@ -1,0 +1,20 @@
+<?php
+require_once 'init.php';
+check_admin();
+
+$stmt = $pdo->query("SELECT id, username FROM hb_users ORDER BY username");
+
+echo "<h2>Benutzerübersicht</h2><table>";
+while ($row = $stmt->fetch()) {
+    echo "<tr>
+        <td>{$row['username']}</td>
+        <td>
+            <a href='admin_user_edit.php?id={$row['id']}'>Bearbeiten</a> |
+            <a href='admin_user_password.php?id={$row['id']}'>Passwort</a> |
+            <a href='admin_user_delete.php?id={$row['id']}'>Löschen</a>
+        </td>
+    </tr>";
+}
+echo "</table><a href='admin_user_new.php'>Neuen Benutzer anlegen</a>";
+?>
+

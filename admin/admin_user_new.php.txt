@@ -1,0 +1,22 @@
+<?php
+require_once 'init.php';
+check_admin();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+
+    $stmt = $pdo->prepare("INSERT INTO hb_users (username, password_hash) VALUES (?, ?)");
+    $stmt->execute([$username, $hash]);
+
+    echo "Benutzer erfolgreich angelegt.";
+} else {
+    echo "<form method='post'>
+        Benutzername: <input name='username'><br>
+        Passwort: <input type='password' name='password'><br>
+        <button type='submit'>Anlegen</button>
+    </form>";
+}
+?>
+
