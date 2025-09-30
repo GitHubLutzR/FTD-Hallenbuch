@@ -1,29 +1,47 @@
 <?php
-require_once(__DIR__ . '/../config.php');
-check_admin();
+require_once(__DIR__ . '/../init.php'); // Pfad ggf. anpassen
+check_admin(); // Nur für eingeloggte Admins
 
-$result = $mysqli->query("SELECT * FROM hb_users ORDER BY username");
+echo "<!DOCTYPE html>
+<html lang='de'>
+<head>
+    <meta charset='UTF-8'>
+    <title>Benutzerübersicht</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a { text-decoration: none; color: #0066cc; }
+    </style>
+</head>
+<body>
+<h1 style='text-align:center;'>👥 Benutzerübersicht</h1>";
 
-if ($result) {
+$result = $mysqli->query("SELECT id, username, email FROM hb_users ORDER BY username");
+
+if ($result && $result->num_rows > 0) {
+    echo "<table>
+        <tr><th>Benutzername</th><th>E-Mail</th><th>Aktionen</th></tr>";
     while ($row = $result->fetch_assoc()) {
-        echo $row['username'];
+        $id = (int)$row['id'];
+        echo "<tr>
+            <td>" . htmlspecialchars($row['username']) . "</td>
+            <td>" . htmlspecialchars($row['email']) . "</td>
+            <td>
+                <a href='admin_user_edit.php?id=$id'>✏️ Bearbeiten</a> |
+                <a href='admin_user_password.php?id=$id'>🔑 Passwort</a> |
+                <a href='admin_user_delete.php?id=$id' onclick=\"return confirm('Benutzer wirklich löschen?');\">🗑️ Löschen</a>
+            </td>
+        </tr>";
     }
+    echo "</table>";
 } else {
-    echo "Fehler bei der Abfrage: " . $mysqli->error;
+    echo "<p style='text-align:center;'>Keine Benutzer gefunden oder Fehler bei der Abfrage.</p>";
 }
-#$stmt = $pdo->query("SELECT * FROM hb_user ORDER BY username");
 
-echo "<h2>Benutzerübersicht</h2><table>";
-while ($row = $stmt->fetch()) {
-    echo "<tr>
-        <td>{$row['username']}</td>
-        <td>
-            <a href='admin_user_edit.php?id={$row['id']}'>Bearbeiten</a> |
-            <a href='admin_user_password.php?id={$row['id']}'>Passwort</a> |
-            <a href='admin_user_delete.php?id={$row['id']}'>Löschen</a>
-        </td>
-    </tr>";
-}
-echo "</table><a href='admin_user_new.php'>Neuen Benutzer anlegen</a>";
+echo "<p style='text-align:center;'><a href='admin_user_new.php'>➕ Neuen Benutzer anlegen</a></p>
+<p style='text-align:center;'><a href='admin_menu.php'>⬅️ Zurück zum Admin-Menü</a></p>
+</body>
+</html>";
 ?>
 
