@@ -7,4 +7,4 @@ CREATE TABLE hallenbuch (
     leiter VARCHAR(100) NOT NULL,
     vermerk TEXT
 );
-
+ALTER TABLE hb_hallenbuch ADD COLUMN bemerkung TEXT;
