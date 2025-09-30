@@ -17,11 +17,10 @@ if (!function_exists('get_db_connection')) {
     function get_db_connection(): mysqli {
         global $hesk_settings;
 
-        echo "<p>🔍 get_db_connection() gestartet</p>";
-
-        echo "<p>Host: {$hesk_settings['db_host']}</p>";
-        echo "<p>User: {$hesk_settings['db_user']}</p>";
-        echo "<p>Datenbank: {$hesk_settings['db_name']}</p>";
+//        echo "<p>🔍 get_db_connection() gestartet</p>";
+//        echo "<p>Host: {$hesk_settings['db_host']}</p>";
+//        echo "<p>User: {$hesk_settings['db_user']}</p>";
+//        echo "<p>Datenbank: {$hesk_settings['db_name']}</p>";
 
         $conn = mysqli_connect(
             $hesk_settings['db_host'],
@@ -35,7 +34,7 @@ if (!function_exists('get_db_connection')) {
             exit;
         }
 
-        echo "<p>✅ Verbindung erfolgreich</p>";
+//        echo "<p>✅ Verbindung erfolgreich</p>";
         return $conn;
     }
 } else {

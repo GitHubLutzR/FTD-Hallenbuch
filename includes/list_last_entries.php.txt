@@ -11,20 +11,20 @@ if (!defined('IN_SCRIPT')) {
 
 // Konfiguration laden
 require_once(__DIR__ . '/../config.php');
-echo "<p>✅ config.php geladen</p>";
+//echo "<p>✅ config.php geladen</p>";
 
 // DB-Verbindung herstellen
 $conn = get_db_connection();
-echo "<p>✅ DB-Verbindung erfolgreich</p>";
+//echo "<p>✅ DB-Verbindung erfolgreich</p>";
 
 // Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-echo "<p>Tabellenname: <strong>$table</strong></p>";
+//echo "<p>Tabellenname: <strong>$table</strong></p>";
 
 // SQL-Befehl
 $sql = "SELECT * FROM $table ORDER BY id DESC LIMIT 10";
-echo "<pre>SQL: $sql</pre>";
+//echo "<pre>SQL: $sql</pre>";
 
 // Query ausführen
 $result = mysqli_query($conn, $sql);
