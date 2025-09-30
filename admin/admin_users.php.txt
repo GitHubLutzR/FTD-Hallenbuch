@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../init.php'); // Pfad ggf. anpassen
+require_once(__DIR__ . '/../config.php'); // Pfad ggf. anpassen
 check_admin(); // Nur für eingeloggte Admins
 
 echo "<!DOCTYPE html>
