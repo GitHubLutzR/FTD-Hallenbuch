@@ -14,9 +14,15 @@ require_once(__DIR__ . '/../config.php');
 echo "<p>✅ config.php geladen</p>";
 
 // DB-Verbindung herstellen
-//$conn = get_db_connection();
-//echo "<p>✅ DB-Verbindung erfolgreich</p>";
+$conn = get_db_connection();
+echo "<p>✅ DB-Verbindung erfolgreich</p>";
+$result = mysqli_query($conn, $sql);
 
+if (!$result) {
+    echo "<p>❌ Fehler beim Abrufen der Einträge: " . mysqli_error($conn) . "</p>";
+    mysqli_close($conn);
+    exit;
+}
 // Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
@@ -24,7 +30,8 @@ echo "<p>Tabellenname: $table</p>";
 
 // Daten abrufen
 $sql = "
-    SELECT datum, von, bis, gruppe, leiter, vermerk, bemerkung
+    SELECT *
+    #SELECT datum, von, bis, gruppe, leiter, vermerk, bemerkung
     FROM $table
     ORDER BY id DESC
     LIMIT 10
