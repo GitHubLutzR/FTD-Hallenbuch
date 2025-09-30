@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $pdo->prepare("INSERT INTO hb_users (username, password_hash) VALUES (?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO hb_user (username, password_hash) VALUES (?, ?)");
     $stmt->execute([$username, $hash]);
 
     echo "Benutzer erfolgreich angelegt.";

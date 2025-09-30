@@ -11,11 +11,11 @@ if (!isset($_SESSION['user'])) {
 $id = $_GET['id'] ?? null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
-    $stmt = $pdo->prepare("UPDATE hb_users SET username = ? WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE hb_user SET username = ? WHERE id = ?");
     $stmt->execute([$username, $id]);
     echo "Benutzername aktualisiert.";
 } else {
-    $stmt = $pdo->prepare("SELECT username FROM hb_users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT username FROM hb_user WHERE id = ?");
     $stmt->execute([$id]);
     $user = $stmt->fetch();
     echo "<form method='post'>

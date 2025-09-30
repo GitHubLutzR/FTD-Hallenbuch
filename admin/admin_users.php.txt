@@ -2,7 +2,7 @@
 require_once(__DIR__ . '/../config.php');
 check_admin();
 
-$stmt = $pdo->query("SELECT id, username FROM hb_users ORDER BY username");
+$stmt = $pdo->query("SELECT * FROM hb_user ORDER BY username");
 
 echo "<h2>Benutzerübersicht</h2><table>";
 while ($row = $stmt->fetch()) {

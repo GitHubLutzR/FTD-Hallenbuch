@@ -10,7 +10,7 @@ if (!isset($_SESSION['user'])) {
 
 $id = $_GET['id'] ?? null;
 if ($id) {
-    $stmt = $pdo->prepare("DELETE FROM hb_users WHERE id = ?");
+    $stmt = $pdo->prepare("DELETE FROM hb_user WHERE id = ?");
     $stmt->execute([$id]);
     echo "Benutzer gelöscht.";
 }
