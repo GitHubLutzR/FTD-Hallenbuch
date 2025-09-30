@@ -1,6 +1,13 @@
 <?php
 require_once(__DIR__ . '/../config.php');
-check_admin(); // Nur für eingeloggte Admins
+session_start();
+
+// Zugriffsschutz
+if (!isset($_SESSION['user'])) {
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+    exit;
+}
+
 
 echo "<h1>Admin-Menü</h1>";
 echo "<ul>
