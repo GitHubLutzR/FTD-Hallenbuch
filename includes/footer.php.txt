@@ -1,0 +1,7 @@
+i</main>
+<footer>
+    <p>&copy; <?= date('Y') ?> FTD Dörnigheim 06 e.V.</p>
+</footer>
+</body>
+</html>
+
