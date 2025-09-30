@@ -1,11 +1,15 @@
 <?php
+define('IN_SCRIPT', 1); // notwendig für HESK-Konfig
 require_once 'config.php';
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 global $hesk_settings;
+$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
+// Eingaben aus dem Formular
 $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
 $bis       = $_POST['bis']       ?? '';
@@ -14,15 +18,13 @@ $leiter    = $_POST['leiter']    ?? '';
 $vermerk   = $_POST['vermerk']   ?? '';
 $bemerkung = $_POST['bemerkung'] ?? '';
 
-echo "<pre>";
-print_r($_POST);
-echo "</pre>";
-
+// Pflichtfeldprüfung
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
     exit;
 }
 
+// Verbindung zur Datenbank
 $conn = mysqli_connect(
     $hesk_settings['db_host'],
     $hesk_settings['db_user'],
@@ -35,22 +37,29 @@ if (!$conn) {
     exit;
 }
 
-$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-
+// SQL vorbereiten
 $stmt = mysqli_prepare($conn, "
     INSERT INTO $table (datum, von, bis, gruppe, leiter, vermerk, bemerkung)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
 
+if (!$stmt) {
+    echo "<p>❌ Fehler beim Vorbereiten der SQL-Anweisung: " . mysqli_error($conn) . "</p>";
+    exit;
+}
+
+// Parameter binden und ausführen
 mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $leiter, $vermerk, $bemerkung);
 
 if (mysqli_stmt_execute($stmt)) {
+    mysqli_stmt_close($stmt);
+    mysqli_close($conn);
     header("Location: index.php?success=1");
     exit;
 } else {
     echo "<p>❌ Fehler beim Speichern: " . mysqli_stmt_error($stmt) . "</p>";
+    mysqli_stmt_close($stmt);
+    mysqli_close($conn);
+    exit;
 }
-
-mysqli_stmt_close($stmt);
-mysqli_close($conn);
 
