@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../config.php';
+
 if (!defined('IN_SCRIPT')) {
     define('IN_SCRIPT', 1);
 }
