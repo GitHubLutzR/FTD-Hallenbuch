@@ -16,56 +16,51 @@ echo "<p>✅ config.php geladen</p>";
 // DB-Verbindung herstellen
 $conn = get_db_connection();
 echo "<p>✅ DB-Verbindung erfolgreich</p>";
-$result = mysqli_query($conn, $sql);
 
-if (!$result) {
-    echo "<p>❌ Fehler beim Abrufen der Einträge: " . mysqli_error($conn) . "</p>";
-    mysqli_close($conn);
-    exit;
-}
 // Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-echo "<p>Tabellenname: $table</p>";
+echo "<p>Tabellenname: <strong>$table</strong></p>";
 
-// Daten abrufen
-$sql = "
-    SELECT *
-    #SELECT datum, von, bis, gruppe, leiter, vermerk, bemerkung
-    FROM $table
-    ORDER BY id DESC
-    LIMIT 10
-";
+// SQL-Befehl
+$sql = "SELECT * FROM $table ORDER BY id DESC LIMIT 10";
 echo "<pre>SQL: $sql</pre>";
 
+// Query ausführen
 $result = mysqli_query($conn, $sql);
 
 if (!$result) {
-    echo "<p>❌ Fehler beim Abrufen der Einträge: " . mysqli_error($conn) . "</p>";
+    echo "<p>❌ SQL-Fehler: " . mysqli_error($conn) . "</p>";
     mysqli_close($conn);
     exit;
 }
 
-// Ausgabe
-echo "<h3>Letzte 10 Einträge:</h3>";
+// Einträge anzeigen
+echo "<h3>Letzte Einträge:</h3>";
 
 if (mysqli_num_rows($result) > 0) {
+    // Spaltennamen dynamisch ermitteln
+    $fields = array_keys(mysqli_fetch_assoc($result));
+    mysqli_data_seek($result, 0); // Zeiger zurücksetzen
+
     echo "<table border='1' cellpadding='5' cellspacing='0'>";
-    echo "<tr><th>Datum</th><th>Von</th><th>Bis</th><th>Gruppe</th><th>Leiter</th><th>Vermerk</th><th>Bemerkung</th></tr>";
+    echo "<tr>";
+    foreach ($fields as $field) {
+        echo "<th>$field</th>";
+    }
+    echo "</tr>";
+
     while ($row = mysqli_fetch_assoc($result)) {
         echo "<tr>";
-        echo "<td>{$row['datum']}</td>";
-        echo "<td>{$row['von']}</td>";
-        echo "<td>{$row['bis']}</td>";
-        echo "<td>{$row['gruppe']}</td>";
-        echo "<td>{$row['leiter']}</td>";
-        echo "<td>{$row['vermerk']}</td>";
-        echo "<td>{$row['bemerkung']}</td>";
+        foreach ($fields as $field) {
+            echo "<td>{$row[$field]}</td>";
+        }
         echo "</tr>";
     }
+
     echo "</table>";
 } else {
-    echo "<p>Keine Einträge gefunden.</p>";
+    echo "<p>⚠️ Keine Einträge gefunden.</p>";
 }
 
 mysqli_close($conn);
