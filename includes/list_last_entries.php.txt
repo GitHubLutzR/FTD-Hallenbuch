@@ -12,6 +12,7 @@ if (!defined('IN_SCRIPT')) {
 // Konfiguration laden
 require_once(__DIR__ . '/../config.php');
 echo "<p>✅ config.php geladen</p>";
+echo "<p>Tabellenname: $table</p>";
 
 // DB-Verbindung herstellen
 $conn = get_db_connection();
@@ -28,6 +29,7 @@ $sql = "
     ORDER BY id DESC
     LIMIT 10
 ";
+echo "<pre>SQL: $sql</pre>";
 
 $result = mysqli_query($conn, $sql);
 
