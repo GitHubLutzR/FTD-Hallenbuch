@@ -2,7 +2,16 @@
 require_once(__DIR__ . '/../config.php');
 check_admin();
 
-$stmt = $pdo->query("SELECT * FROM hb_user ORDER BY username");
+$result = $mysqli->query("SELECT * FROM hb_users ORDER BY username");
+
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        echo $row['username'];
+    }
+} else {
+    echo "Fehler bei der Abfrage: " . $mysqli->error;
+}
+#$stmt = $pdo->query("SELECT * FROM hb_user ORDER BY username");
 
 echo "<h2>Benutzerübersicht</h2><table>";
 while ($row = $stmt->fetch()) {
