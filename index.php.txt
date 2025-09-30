@@ -1,10 +1,22 @@
-<?php require_once 'includes/header.php'; ?>
+<?php 
 
-<?php
+require_once 'includes/header.php'; 
+session_start();
 if (isset($_GET['success']) && $_GET['success'] == 1) {
     echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
 }
+
 ?>
+<div style="position:absolute; top:10px; right:10px; font-size:0.9em;">
+<?php
+if (isset($_SESSION['user'])) {
+    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
+    echo "<a href='logout.php'>Logout</a>";
+} else {
+    echo "<a href='login.php'>🔐 Admin-Login</a>";
+}
+?>
+</div>
 
 <form action="submit.php" method="post">
     <label>Datum: <input type="date" name="datum" value="<?= date('Y-m-d') ?>" required></label><BR>
