@@ -1,4 +1,5 @@
 <?php
+define('IN_SCRIPT', 1); // HESK erwartet diese Konstante
 // HESK-Konfiguration einbinden
 require_once '/srv/hesk_settings.inc.php';
 
