@@ -4,7 +4,6 @@
 if (isset($_GET['success']) && $_GET['success'] == 1) {
     echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
 }
-    include 'includes/list_last_entries.php';
 ?>
 
 <form action="submit.php" method="post">
@@ -18,5 +17,8 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
     <button type="submit">Eintragen</button>
 </form>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php 
+    include 'includes/list_last_entries.php';
+    require_once 'includes/footer.php'; 
+?>
 
