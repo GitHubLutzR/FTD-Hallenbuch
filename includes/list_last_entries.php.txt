@@ -14,8 +14,8 @@ require_once(__DIR__ . '/../config.php');
 echo "<p>✅ config.php geladen</p>";
 
 // DB-Verbindung herstellen
-$conn = get_db_connection();
-echo "<p>✅ DB-Verbindung erfolgreich</p>";
+//$conn = get_db_connection();
+//echo "<p>✅ DB-Verbindung erfolgreich</p>";
 
 // Tabellennamen aus HESK-Konfiguration
 global $hesk_settings;
