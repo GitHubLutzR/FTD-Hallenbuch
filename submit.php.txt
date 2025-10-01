@@ -63,6 +63,26 @@ if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     exit;
 }
 
+// Kombinierten Zeitstempel erzeugen
+$eintragZeit = strtotime("$datum $von");
+$jetzt = time();
+
+// Maximal erlaubte Zukunft: 1 Stunde
+$maxZukunft = $jetzt + 3600;
+
+// Validierung
+if ($eintragZeit > $maxZukunft) {
+    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
+}
+
+if ($eintragZeit > strtotime(date('Y-m-d H:i:s'))) {
+    // Optional: Wenn du zusätzlich das Datum allein prüfen willst
+    $heute = strtotime(date('Y-m-d'));
+    if (strtotime($datum) > $heute) {
+        die("Fehler: Das Datum liegt in der Zukunft.");
+    }
+}
+
 // Verbindung zur Datenbank
 $conn = mysqli_connect(
     $hesk_settings['db_host'],
