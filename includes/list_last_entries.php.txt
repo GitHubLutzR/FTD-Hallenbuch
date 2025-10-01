@@ -15,21 +15,32 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<h3>Letzte Einträge:</h3>";
 
     // Manuell definierte Spaltenüberschriften (ohne ID)
-    $columnLabels = [
-        'datum'     => 'Datum',
-        'von'       => 'Von',
-        'bis'       => 'Bis',
-        'gruppe'    => 'Gruppe',
-        'leiter'    => 'Leiter',
-//        'vermerk'   => 'Vermerk',
-        'bemerkung' => 'Bemerkung'
+    $columnConfig = [
+        'datum'     => ['label' => 'Datum',     'width' => '100px'],
+        'von'       => ['label' => 'Von',       'width' => '60px'],
+        'bis'       => ['label' => 'Bis',       'width' => '60px'],
+        'gruppe'    => ['label' => 'Gruppe',    'width' => '120px'],
+        'leiter'    => ['label' => 'Leiter',    'width' => '120px'],
+        'bemerkung' => ['label' => 'Bemerkung', 'width' => '300px']
     ];
+//    $columnLabels = [
+//        'datum'     => 'Datum',
+//        'von'       => 'Von',
+//        'bis'       => 'Bis',
+//        'gruppe'    => 'Gruppe',
+//        'leiter'    => 'Leiter',
+//        'vermerk'   => 'Vermerk',
+//        'bemerkung' => 'Bemerkung'
+//    ];
 
     echo "<table border='1' cellpadding='5' cellspacing='0'>";
     echo "<tr>";
-    foreach ($columnLabels as $label) {
-        echo "<th>$label</th>";
+    foreach ($columnConfig as $key => $config) {
+        echo "<th style='width:{$config['width']};'>{$config['label']}</th>";
     }
+//    foreach ($columnLabels as $label) {
+//        echo "<th>$label</th>";
+//    }
     echo "</tr>";
 
     while ($row = mysqli_fetch_assoc($result)) {
