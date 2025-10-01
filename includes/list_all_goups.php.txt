@@ -11,17 +11,12 @@ $sql = "SELECT * FROM $table ";
 
 $result = mysqli_query($conn, $sql);
 
-if ($result && mysqli_num_rows($result) < 0) {
+if ($result && mysqli_num_rows($result) > 0) {
   ########################
-  echo "<h3>Letzte Einträge:</h3>";
+  echo "<h3>Liste der Gruppen:</h3>";
 
   $columnConfig = [
-    'datum'     => ['label' => 'Datum',     'width' => '100px'],
-    'von'       => ['label' => 'Von',       'width' => '60px'],
-    'bis'       => ['label' => 'Bis',       'width' => '60px'],
-    'gruppe'    => ['label' => 'Gruppe',    'width' => '120px'],
-    'leiter'    => ['label' => 'Leiter',    'width' => '120px'],
-    'bemerkung' => ['label' => 'Bemerkung', 'width' => '300px']
+    'name'     => ['label' => 'Gruppenname',     'width' => '100px']
   ];
 
   echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
