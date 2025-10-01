@@ -12,53 +12,50 @@ $sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC LIMIT 10";
 $result = mysqli_query($conn, $sql);
 
 if ($result && mysqli_num_rows($result) > 0) {
-// Tabelle ausgeben
-echo '<style>
-    table.last-entries {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-        margin-top: 10px;
-    }
-    table.last-entries th, table.last-entries td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        text-align: left;
-        overflow-wrap: break-word;
-        vertical-align: top;
-    }
-    table.last-entries th.bemerkung,
-    table.last-entries td.bemerkung {
-        width: 300px;
-        max-width: 400px;
-    }
-</style>';
+    echo "<h3>Letzte Einträge:</h3>";
 
-echo '<h2>Letzte Einträge:</h2>';
-echo '<table class="last-entries">';
-echo '<tr>
-        <th>Datum</th>
-        <th>Von</th>
-        <th>Bis</th>
-        <th>Gruppe</th>
-        <th>Leiter</th>
-        <th>Vermerk</th>
-        <th class="bemerkung">Bemerkung</th>
-      </tr>';
+    // Manuell definierte Spaltenüberschriften (ohne ID)
+    $columnLabels = [
+        'datum'     => 'Datum',
+        'von'       => 'Von',
+        'bis'       => 'Bis',
+        'gruppe'    => 'Gruppe',
+        'leiter'    => 'Leiter',
+//        'vermerk'   => 'Vermerk',
+        'bemerkung' => 'Bemerkung'
+    ];
 
-while ($row = mysqli_fetch_assoc($result)) {
-    echo '<tr>
-            <td>' . date('d.m.Y', strtotime($row['datum'])) . '</td>
-            <td>' . htmlspecialchars($row['von']) . '</td>
-            <td>' . htmlspecialchars($row['bis']) . '</td>
-            <td>' . htmlspecialchars($row['gruppe']) . '</td>
-            <td>' . htmlspecialchars($row['leiter']) . '</td>
-            <td>' . htmlspecialchars($row['vermerk']) . '</td>
-            <td class="bemerkung">' . nl2br(htmlspecialchars($row['bemerkung'])) . '</td>
-          </tr>';
-}
+    echo "<table border='1' cellpadding='5' cellspacing='0'>";
+    echo "<tr>";
+    foreach ($columnLabels as $label) {
+        echo "<th>$label</th>";
+    }
+    echo "</tr>";
 
-echo '</table>';
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>";
+        foreach ($columnLabels as $key => $label) {
+            $value = $row[$key];
+
+            // Zeitfelder kürzen auf HH:MM
+            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                $value = substr($value, 0, 5);
+            }
+
+    	    // Datum umwandeln in TT.MM.JJJJ
+	        if ($key === 'datum' && !empty($value)) {
+	            $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+	            if ($dateObj) {
+	                $value = $dateObj->format('d.m.Y');
+	            }
+	        }
+
+            echo "<td>$value</td>";
+        }
+        echo "</tr>";
+    }
+
+    echo "</table>";
 } else {
     echo "<p>Keine Einträge gefunden.</p>";
 }
