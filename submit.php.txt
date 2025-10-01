@@ -71,9 +71,9 @@ $jetzt = time();
 $maxZukunft = $jetzt + 3600;
 
 // Validierung
-if ($eintragZeit > $maxZukunft) {
-    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
-}
+//if ($eintragZeit > $maxZukunft) {
+//    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
+//}
 
 if ($eintragZeit > strtotime(date('Y-m-d H:i:s'))) {
     // Optional: Wenn du zusätzlich das Datum allein prüfen willst
