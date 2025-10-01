@@ -31,7 +31,7 @@ if (isset($_SESSION['user'])) {
             <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
           </form></div>";
 } else {
-    echo "<a href='login.php'>🔐 Admin-Login</a>";
+    echo "<div style='text-align:right;'><a href='login.php'>🔐 Admin-Login</a></div>";
 } 
 ?>
 <header>
