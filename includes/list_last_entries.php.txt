@@ -53,7 +53,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             $value = $dateObj->format('d.m.Y');
           }
         }
-        echo "<td>$value</td>";
+        echo "<td style='width:{$config['width']}; border: 3px solid #ccc; padding: 4px;'>$value</td>";
       }
     }
     echo "</tr>";
