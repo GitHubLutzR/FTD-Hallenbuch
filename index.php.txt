@@ -33,19 +33,19 @@ $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 //echo $table;
-$sql = "SELECT * FROM $table ORDER BY name = 'sonstige' DESC, name ASC";
+//$sql = "SELECT * FROM $table ORDER BY name = 'sonstige' DESC, name ASC";
 //echo $sql;
-$result = mysqli_query($conn, $sql);
+//$result = mysqli_query($conn, $sql);
 
-if ($result && mysqli_num_rows($result) > 0) {
-    echo "<ul>";
-    while ($row = mysqli_fetch_assoc($result)) {
-        echo "<li>" . htmlspecialchars($row['name']) . "</li>";
-    }
-    echo "</ul>";
-} else {
-    echo "keine Gruppen gefunden";
-}
+//if ($result && mysqli_num_rows($result) > 0) {
+    //echo "<ul>";
+    //while ($row = mysqli_fetch_assoc($result)) {
+        //echo "<li>" . htmlspecialchars($row['name']) . "</li>";
+    //}
+    //echo "</ul>";
+//} else {
+    //echo "keine Gruppen gefunden";
+//}
 
 ?>
 </div>
@@ -93,7 +93,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     <select name="gruppe" id="gruppe" required>
       <option value="">Bitte wählen</option>
       <?php
-      $sql = "SELECT * FROM hb_gruppen ORDER BY name ASC";
+      $sql = "SELECT * FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC";
       $result = mysqli_query($conn, $sql);
       if ($result && mysqli_num_rows($result) > 0) {
           while ($row = mysqli_fetch_assoc($result)) {
