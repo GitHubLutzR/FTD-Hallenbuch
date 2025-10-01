@@ -71,18 +71,10 @@ $jetzt = time();
 $maxZukunft = $jetzt + 3600;
 
 // Validierung
-//if ($eintragZeit > $maxZukunft) {
-//    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
-//}
-
-if ($eintragZeit > strtotime(date('Y-m-d H:i:s'))) {
-    // Optional: Wenn du zusätzlich das Datum allein prüfen willst
-    $heute = strtotime(date('Y-m-d'));
-    if (strtotime($datum) > $heute) {
+if ($eintragZeit > $maxZukunft) {
         header("Location: index.php?rcsubmit=2");
         exit;
-        #die("Fehler: Das Datum liegt in der Zukunft.");
-    }
+//    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
 }
 
 // Verbindung zur Datenbank
