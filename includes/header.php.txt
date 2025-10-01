@@ -22,7 +22,7 @@
 if (isset($_POST['reset_session'])) {
     unset($_SESSION['eintrags_count']);
     unset($_SESSION['eintrags_reset']); // falls du eine Zeitsteuerung nutzt
-    echo "<p>✅ Eintragszähler wurde zurückgesetzt.</p>";
+    echo "<div style='text-align:right;'><p>✅ Eintragszähler wurde zurückgesetzt.</p></div>";
 }
 if (isset($_SESSION['user'])) {
     echo "<div style='text-align:right;'>👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
