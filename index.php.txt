@@ -20,12 +20,12 @@ if (isset($_GET['rcsubmit'])) {
 ?>
 <div style="position:absolute; top:10px; right:10px; font-size:0.9em;">
 <?php
-if (isset($_SESSION['user'])) {
-    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
-    echo "<a href='logout.php'>Logout</a>";
-} else {
-    echo "<a href='login.php'>🔐 Admin-Login</a>";
-}
+//if (isset($_SESSION['user'])) {
+//    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
+//    echo "<a href='logout.php'>Logout</a>";
+//} else {
+//    echo "<a href='login.php'>🔐 Admin-Login</a>";
+//}
 
 
 $conn = get_db_connection();

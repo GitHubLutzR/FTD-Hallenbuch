@@ -6,6 +6,14 @@
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<?php
+if (isset($_SESSION['user'])) {
+    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
+    echo "<a href='logout.php'>Logout</a>";
+} else {
+    echo "<a href='login.php'>🔐 Admin-Login</a>";
+} 
+?>
 <header>
     <h1>FTD Hallenbuch</h1>
 </header>
