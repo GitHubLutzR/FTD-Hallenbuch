@@ -79,7 +79,9 @@ if ($eintragZeit > strtotime(date('Y-m-d H:i:s'))) {
     // Optional: Wenn du zusätzlich das Datum allein prüfen willst
     $heute = strtotime(date('Y-m-d'));
     if (strtotime($datum) > $heute) {
-        die("Fehler: Das Datum liegt in der Zukunft.");
+        header("Location: index.php?rcsubmit=2");
+        exit;
+        #die("Fehler: Das Datum liegt in der Zukunft.");
     }
 }
 
@@ -114,7 +116,7 @@ if (mysqli_stmt_execute($stmt)) {
     $_SESSION['entry_count']++; // Zähler erhöhen
     mysqli_stmt_close($stmt);
     mysqli_close($conn);
-    header("Location: index.php?success=1");
+    header("Location: index.php?rcsubmit=1");
     exit;
 } else {
     echo "<p>❌ Fehler beim Speichern: " . mysqli_stmt_error($stmt) . "</p>";

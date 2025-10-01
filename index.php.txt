@@ -2,8 +2,16 @@
 session_start();
 
 require_once 'includes/header.php'; 
-if (isset($_GET['success']) && $_GET['success'] == 1) {
-    echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
+if (isset($_GET['rcsubmit'])) {
+    if ($_GET['rcsubmit'] == 1) {
+        echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
+    } elseif ($_GET['rcsubmit'] == 2) {
+        echo "<p>⚠️ Fehler: Der Eintrag liegt zu weit in der Zukunft und wurde nicht gespeichert.</p>";
+    } elseif ($_GET['rcsubmit'] == 3) {
+        echo "<p>⚠️ Fehler: Ungültige Eingabe – bitte Datum und Uhrzeit prüfen.</p>";
+    } else {
+        echo "<p>❌ Unbekannter Status – bitte erneut versuchen.</p>";
+    }
 }
 
 ?>
