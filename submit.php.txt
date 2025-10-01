@@ -57,11 +57,21 @@ $gruppe    = $_POST['gruppe']    ?? '';
 $leiter    = $_POST['leiter']    ?? '';
 $vermerk   = $_POST['vermerk']   ?? '';
 $bemerkung = $_POST['bemerkung'] ?? '';
+$gruppe_sonstige = $_POST['gruppe_sonstige'] ?? '';
 
 // Pflichtfeldprüfung
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
     exit;
+}
+
+// Gruppe "sonstige" umschreiben
+if (strtolower($gruppe) === 'sonstige') {
+    $gruppe_sonstige = trim($gruppe_sonstige);
+    if ($gruppe_sonstige === '') {
+        die("❌ Fehler: Bitte Gruppe angeben, wenn 'sonstige' gewählt wurde.");
+    }
+    $gruppe = $gruppe_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
 }
 
 // Kombinierten Zeitstempel erzeugen
