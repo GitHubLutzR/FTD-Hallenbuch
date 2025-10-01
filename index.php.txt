@@ -32,15 +32,19 @@ $conn = get_db_connection();
 
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
-
+//echo $table;
 $sql = "SELECT * FROM $table ORDER BY name DESC";
-
+//echo $sql;
 $result = mysqli_query($conn, $sql);
 
 if ($result && mysqli_num_rows($result) > 0) {
-  echo $result;
+    echo "<ul>";
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<li>" . htmlspecialchars($row['name']) . "</li>";
+    }
+    echo "</ul>";
 } else {
-  echo "keine Gruppen gefunden";
+    echo "keine Gruppen gefunden";
 }
 
 ?>
@@ -86,7 +90,21 @@ if ($result && mysqli_num_rows($result) > 0) {
   </div>
   <div class="form-row">
     <label for="gruppe">Gruppe:</label>
-    <input type="text" name="gruppe" id="gruppe" required>
+    <select name="gruppe" id="gruppe" required>
+      <option value="">Bitte wählen</option>
+      <?php
+      $sql = "SELECT * FROM hb_gruppen ORDER BY name ASC";
+      $result = mysqli_query($conn, $sql);
+      if ($result && mysqli_num_rows($result) > 0) {
+          while ($row = mysqli_fetch_assoc($result)) {
+              $g = htmlspecialchars($row['name']);
+              echo "<option value=\"$g\">$g</option>";
+          }
+      } else {
+          echo "<option disabled>Keine Gruppen gefunden</option>";
+      }
+      ?>
+    </select>
   </div>
   <div class="form-row">
     <label for="leiter">Leiter:</label>
