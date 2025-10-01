@@ -2,6 +2,9 @@
 session_start();
 
 require_once 'includes/header.php'; 
+require_once(__DIR__ . '/config.php');
+
+
 if (isset($_GET['rcsubmit'])) {
     if ($_GET['rcsubmit'] == 1) {
         echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
@@ -24,18 +27,20 @@ if (isset($_SESSION['user'])) {
     echo "<a href='login.php'>🔐 Admin-Login</a>";
 }
 
+
 $conn = get_db_connection();
 
 global $hesk_settings;
-$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
+$table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 
-#$sql = "SELECT * FROM $table ORDER BY id DESC LIMIT 10";
-$sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC LIMIT 10";
+$sql = "SELECT * FROM $table ORDER BY name DESC";
 
 $result = mysqli_query($conn, $sql);
 
 if ($result && mysqli_num_rows($result) > 0) {
-  echo $result
+  echo $result;
+} else {
+  echo "keine Gruppen gefunden"
 }
 
 ?>
