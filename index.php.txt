@@ -18,15 +18,52 @@ if (isset($_SESSION['user'])) {
 ?>
 </div>
 
+<style>
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.form-row label {
+  width: 100px; /* feste Breite für die Beschriftung */
+}
+.form-row input,
+.form-row textarea {
+  flex: 1;
+  padding: 4px;
+}
+</style>
+
 <form action="submit.php" method="post">
-    <label>Datum: <input type="date" name="datum" value="<?= date('Y-m-d') ?>" required></label><BR>
-    <label>Von: <input type="time" name="von" required></label><BR>
-    <label>Bis: <input type="time" name="bis" required></label><BR>
-    <label>Gruppe: <input type="text" name="gruppe" required></label><BR>
-    <label>Leiter: <input type="text" name="leiter" required></label><BR>
-    <label>Vermerk: <input type="text" name="vermerk"></label><BR>
-    <label>Bemerkung: <textarea name="bemerkung"></textarea></label><BR>
-    <button type="submit">Eintragen</button>
+  <div class="form-row">
+    <label for="datum">Datum:</label>
+    <input type="date" name="datum" id="datum" value="<?= date('Y-m-d') ?>" required>
+  </div>
+  <div class="form-row">
+    <label for="von">Von:</label>
+    <input type="time" name="von" id="von" required>
+  </div>
+  <div class="form-row">
+    <label for="bis">Bis:</label>
+    <input type="time" name="bis" id="bis" required>
+  </div>
+  <div class="form-row">
+    <label for="gruppe">Gruppe:</label>
+    <input type="text" name="gruppe" id="gruppe" required>
+  </div>
+  <div class="form-row">
+    <label for="leiter">Leiter:</label>
+    <input type="text" name="leiter" id="leiter" required>
+  </div>
+  <div class="form-row">
+    <label for="vermerk">Vermerk:</label>
+    <input type="text" name="vermerk" id="vermerk">
+  </div>
+  <div class="form-row">
+    <label for="bemerkung">Bemerkung:</label>
+    <textarea name="bemerkung" id="bemerkung"></textarea>
+  </div>
+  <button type="submit">Eintragen</button>
 </form>
 
 <?php 
