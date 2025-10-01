@@ -19,9 +19,17 @@
 </head>
 <body>
 <?php
+if (isset($_POST['reset_session'])) {
+    unset($_SESSION['eintrags_count']);
+    unset($_SESSION['eintrags_reset']); // falls du eine Zeitsteuerung nutzt
+    echo "<p>✅ Eintragszähler wurde zurückgesetzt.</p>";
+}
 if (isset($_SESSION['user'])) {
     echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
-    echo "<a href='logout.php'>Logout</a>";
+    echo "<a href='logout.php'>Logout</a><BR>";
+    echo "<form method='post' style='display:inline;'>
+            <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
+          </form>";
 } else {
     echo "<a href='login.php'>🔐 Admin-Login</a>";
 } 
