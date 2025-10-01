@@ -33,7 +33,7 @@ $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 //echo $table;
-$sql = "SELECT * FROM $table ORDER BY name DESC";
+$sql = "SELECT * FROM $table ORDER BY name = 'sonstige' DESC, name ASC";
 //echo $sql;
 $result = mysqli_query($conn, $sql);
 
@@ -89,9 +89,8 @@ if ($result && mysqli_num_rows($result) > 0) {
     <input type="time" name="bis" id="bis" required>
   </div>
   <div class="form-row">
-    <label for="gruppe">Gruppe:</label>
-    <select name="gruppe" id="gruppe" required>
-      <option value="">Bitte wählen</option>
+    <label for="gruppe">Gruppe(n):</label>
+    <select name="gruppe[]" id="gruppe" multiple size="6" required>
       <?php
       $sql = "SELECT * FROM hb_gruppen ORDER BY name ASC";
       $result = mysqli_query($conn, $sql);
