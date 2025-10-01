@@ -89,21 +89,16 @@ if ($result && mysqli_num_rows($result) > 0) {
     <input type="time" name="bis" id="bis" required>
   </div>
   <div class="form-row">
-    <label for="gruppe">Gruppe(n):</label>
-    <select name="gruppe[]" id="gruppe" multiple size="6" required>
+    <label>Gruppe(n):</label>
+    <div id="gruppen-checkboxes">
       <?php
-      $sql = "SELECT * FROM hb_gruppen ORDER BY name ASC";
-      $result = mysqli_query($conn, $sql);
-      if ($result && mysqli_num_rows($result) > 0) {
-          while ($row = mysqli_fetch_assoc($result)) {
-              $g = htmlspecialchars($row['name']);
-              echo "<option value=\"$g\">$g</option>";
-          }
-      } else {
-          echo "<option disabled>Keine Gruppen gefunden</option>";
+      $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
+      while ($row = mysqli_fetch_assoc($result)) {
+          $g = htmlspecialchars($row['name']);
+          echo "<label><input type=\"checkbox\" name=\"gruppe[]\" value=\"$g\"> $g</label><br>";
       }
       ?>
-    </select>
+    </div>
   </div>
   <div class="form-row">
     <label for="leiter">Leiter:</label>
