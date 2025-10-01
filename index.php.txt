@@ -93,19 +93,27 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <select name="gruppe" id="gruppe" required>
       <option value="">Bitte wählen</option>
       <?php
-      $sql = "SELECT * FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC";
-      $result = mysqli_query($conn, $sql);
-      if ($result && mysqli_num_rows($result) > 0) {
-          while ($row = mysqli_fetch_assoc($result)) {
-              $g = htmlspecialchars($row['name']);
-              echo "<option value=\"$g\">$g</option>";
-          }
-      } else {
-          echo "<option disabled>Keine Gruppen gefunden</option>";
+      $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
+      while ($row = mysqli_fetch_assoc($result)) {
+          $g = htmlspecialchars($row['name']);
+          echo "<option value=\"$g\">$g</option>";
       }
       ?>
     </select>
   </div>
+
+  <div class="form-row" id="gruppe-sonstige-row" style="display:none;">
+    <label for="gruppe_sonstige">Bitte Gruppe angeben:</label>
+    <input type="text" name="gruppe_sonstige" id="gruppe_sonstige" maxlength="100">
+  </div>
+  <script>
+  document.getElementById('gruppe').addEventListener('change', function () {
+    const sonstigeFeld = document.getElementById('gruppe-sonstige-row');
+    sonstigeFeld.style.display = (this.value.toLowerCase() === 'sonstige') ? 'block' : 'none';
+  });
+  </script>
+
+#####
   <div class="form-row">
     <label for="leiter">Leiter:</label>
     <input type="text" name="leiter" id="leiter" required>
