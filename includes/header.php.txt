@@ -25,11 +25,11 @@ if (isset($_POST['reset_session'])) {
     echo "<p>✅ Eintragszähler wurde zurückgesetzt.</p>";
 }
 if (isset($_SESSION['user'])) {
-    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
+    echo "<div style='text-align:right;'>👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
     echo "<a href='logout.php'>Logout</a><BR>";
     echo "<form method='post' style='display:inline;'>
             <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
-          </form>";
+          </form></div>";
 } else {
     echo "<a href='login.php'>🔐 Admin-Login</a>";
 } 
