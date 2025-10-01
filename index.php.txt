@@ -25,12 +25,21 @@ if (isset($_SESSION['user'])) {
   margin-bottom: 8px;
 }
 .form-row label {
-  width: 100px; /* feste Breite für die Beschriftung */
+  width: 100px;
 }
-.form-row input,
+.form-row input[type="date"],
+.form-row input[type="time"] {
+  width: 140px;
+}
+.form-row input[type="text"] {
+  width: 300px;
+}
+.form-row input[type="text"][name="vermerk"] {
+  width: 200px;
+}
 .form-row textarea {
-  flex: 1;
-  padding: 4px;
+  width: 300px;
+  height: 60px;
 }
 </style>
 
