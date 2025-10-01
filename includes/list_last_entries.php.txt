@@ -1,4 +1,5 @@
 <?php
+<?php
 require_once(__DIR__ . '/../config.php');
 
 $conn = get_db_connection();
@@ -12,53 +13,57 @@ $sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC LIMIT 10";
 $result = mysqli_query($conn, $sql);
 
 if ($result && mysqli_num_rows($result) > 0) {
-    echo "<h3>Letzte Einträge:</h3>";
+  ########################
+  echo "<h3>Letzte Einträge:</h3>";
 
-    // Manuell definierte Spaltenüberschriften (ohne ID)
-    $columnLabels = [
-        'datum'     => 'Datum',
-        'von'       => 'Von',
-        'bis'       => 'Bis',
-        'gruppe'    => 'Gruppe',
-        'leiter'    => 'Leiter',
-//        'vermerk'   => 'Vermerk',
-        'bemerkung' => 'Bemerkung'
-    ];
+  $columnConfig = [
+    'datum'     => ['label' => 'Datum',     'width' => '100px'],
+    'von'       => ['label' => 'Von',       'width' => '60px'],
+    'bis'       => ['label' => 'Bis',       'width' => '60px'],
+    'gruppe'    => ['label' => 'Gruppe',    'width' => '120px'],
+    'leiter'    => ['label' => 'Leiter',    'width' => '120px'],
+    'bemerkung' => ['label' => 'Bemerkung', 'width' => '300px']
+  ];
 
-    echo "<table border='1' cellpadding='5' cellspacing='0'>";
+  echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
+
+  // Tabellenkopf
+  echo "<tr>";
+  foreach ($columnConfig as $key => $config) {
+    echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+  }
+  echo "</tr>";
+
+  // Datenzeilen
+  while ($row = mysqli_fetch_assoc($result)) {
     echo "<tr>";
-    foreach ($columnLabels as $label) {
-        echo "<th>$label</th>";
+    foreach ($columnConfig as $key => $config) {
+      $value = htmlspecialchars($row[$key] ?? '');
+      if ($key === 'bemerkung' && strlen($value) > 150) {
+        $value = substr($value, 0, 147) . '...';
+        echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+      } else {
+        // Zeitfelder kürzen auf HH:MM
+        if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+          $value = substr($value, 0, 5);
+        }
+        // Datum umwandeln in TT.MM.JJJJ
+        if ($key === 'datum' && !empty($value)) {
+          $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+          if ($dateObj) {
+            $value = $dateObj->format('d.m.Y');
+          }
+        }
+        echo "<td>$value</td>";
+      }
     }
     echo "</tr>";
+  }
 
-    while ($row = mysqli_fetch_assoc($result)) {
-        echo "<tr>";
-        foreach ($columnLabels as $key => $label) {
-            $value = $row[$key];
-
-            // Zeitfelder kürzen auf HH:MM
-            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
-                $value = substr($value, 0, 5);
-            }
-
-    	    // Datum umwandeln in TT.MM.JJJJ
-	        if ($key === 'datum' && !empty($value)) {
-	            $dateObj = DateTime::createFromFormat('Y-m-d', $value);
-	            if ($dateObj) {
-	                $value = $dateObj->format('d.m.Y');
-	            }
-	        }
-
-            echo "<td>$value</td>";
-        }
-        echo "</tr>";
-    }
-
-    echo "</table>";
+  echo "</table>";
+  #######################
 } else {
-    echo "<p>Keine Einträge gefunden.</p>";
+  echo "<p>Keine Einträge gefunden.</p>";
 }
 
 mysqli_close($conn);
-
