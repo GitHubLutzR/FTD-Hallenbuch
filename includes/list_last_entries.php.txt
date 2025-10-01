@@ -29,7 +29,7 @@ if ($result && mysqli_num_rows($result) > 0) {
   // Tabellenkopf
   echo "<tr>";
   foreach ($columnConfig as $key => $config) {
-    echo "<th style='width:{$config['width']}; border: 3px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+    echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
   }
   echo "</tr>";
 
@@ -40,7 +40,7 @@ if ($result && mysqli_num_rows($result) > 0) {
       $value = htmlspecialchars($row[$key] ?? '');
       if ($key === 'bemerkung' && strlen($value) > 150) {
         $value = substr($value, 0, 147) . '...';
-        echo "<td style='width:{$config['width']}; border: 3px solid #ccc; padding: 4px;'>$value</td>";
+        echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
       } else {
         // Zeitfelder kürzen auf HH:MM
         if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
@@ -53,7 +53,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             $value = $dateObj->format('d.m.Y');
           }
         }
-        echo "<td style='width:{$config['width']}; border: 3px solid #ccc; padding: 4px;'>$value</td>";
+        echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
       }
     }
     echo "</tr>";
