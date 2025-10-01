@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-$mysqli->set_charset('utf8mb4');
+//$mysqli->set_charset('utf8mb4');
 
 // Eintragszähler initialisieren
 if (!isset($_SESSION['entry_count'])) {
