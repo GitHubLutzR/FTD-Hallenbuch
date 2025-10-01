@@ -21,7 +21,7 @@ if ($result && mysqli_num_rows($result) > 0) {
         'bis'       => 'Bis',
         'gruppe'    => 'Gruppe',
         'leiter'    => 'Leiter',
-        'vermerk'   => 'Vermerk',
+//        'vermerk'   => 'Vermerk',
         'bemerkung' => 'Bemerkung'
     ];
 
