@@ -72,10 +72,12 @@ if (isset($_SESSION['user'])) {
     <label for="leiter">Leiter:</label>
     <input type="text" name="leiter" id="leiter" required>
   </div>
-//  <div class="form-row">
-//    <label for="vermerk">Vermerk:</label>
-//    <input type="text" name="vermerk" id="vermerk">
-//  </div>
+<!-- 
+  <div class="form-row">
+    <label for="vermerk">Vermerk:</label>
+    <input type="text" name="vermerk" id="vermerk">
+  </div>
+-->
   <div class="form-row">
     <label for="bemerkung">Bemerkung:</label>
     <textarea name="bemerkung" id="bemerkung"></textarea>
