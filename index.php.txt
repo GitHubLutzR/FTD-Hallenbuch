@@ -20,32 +20,11 @@ if (isset($_GET['rcsubmit'])) {
 ?>
 <div style="position:absolute; top:10px; right:10px; font-size:0.9em;">
 <?php
-//if (isset($_SESSION['user'])) {
-//    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
-//    echo "<a href='logout.php'>Logout</a>";
-//} else {
-//    echo "<a href='login.php'>🔐 Admin-Login</a>";
-//}
-
 
 $conn = get_db_connection();
 
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
-//echo $table;
-//$sql = "SELECT * FROM $table ORDER BY name = 'sonstige' DESC, name ASC";
-//echo $sql;
-//$result = mysqli_query($conn, $sql);
-
-//if ($result && mysqli_num_rows($result) > 0) {
-    //echo "<ul>";
-    //while ($row = mysqli_fetch_assoc($result)) {
-        //echo "<li>" . htmlspecialchars($row['name']) . "</li>";
-    //}
-    //echo "</ul>";
-//} else {
-    //echo "keine Gruppen gefunden";
-//}
 
 ?>
 </div>
@@ -112,8 +91,6 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     sonstigeFeld.style.display = (this.value.toLowerCase() === 'sonstige') ? 'block' : 'none';
   });
   </script>
-
-#####
   <div class="form-row">
     <label for="leiter">Leiter:</label>
     <input type="text" name="leiter" id="leiter" required>
