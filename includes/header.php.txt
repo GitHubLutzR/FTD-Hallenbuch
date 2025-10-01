@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>FTD Hallenbuch</title>
-    <link rel="stylesheet" href="assets/style.css">
+  <meta charset="UTF-8">
+  <title>FTD Hallenbuch</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <meta charset="utf-8">
+  <title>FTD Hallenbuch</title>
+  <style>
+    .logout {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.9em;
+      text-align: right;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-.logout {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 0.9em;
-  text-align: right;
-  z-index: 1000;
-}
 <?php
 if (isset($_SESSION['user'])) {
     echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
