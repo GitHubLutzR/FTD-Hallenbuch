@@ -4,6 +4,11 @@ $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
+// Auswahl für Anzahl der Einträge
+$limitOptions = [10, 25, 50, 100, 'ALLE'];
+$selectedLimit = $_GET['limit'] ?? 10;
+$selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
+
 // Löschvorgang
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
     $idsToDelete = array_map('intval', $_POST['delete_ids']);
@@ -15,8 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
 }
 
 // Einträge abrufen
-$sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC LIMIT 10";
+$limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
+$sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC $limitClause";
 $result = mysqli_query($conn, $sql);
+
+// Auswahlformular
+echo "<form method='GET' style='margin-bottom: 10px;'>";
+echo "<label for='limit'>Anzahl Einträge anzeigen:</label> ";
+echo "<select name='limit' id='limit' onchange='this.form.submit()'>";
+foreach ($limitOptions as $option) {
+    $selected = ($selectedLimit == $option) ? "selected" : "";
+    echo "<option value='$option' $selected>$option</option>";
+}
+echo "</select>";
+echo "</form>";
 
 echo "<h3>Letzte Einträge:</h3>";
 
