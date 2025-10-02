@@ -8,28 +8,35 @@ $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 $selectedDate   = $_GET['filter_date'] ?? '';
 $selectedWeek   = $_GET['filter_week'] ?? '';
 $selectedMonth  = $_GET['filter_month'] ?? '';
-$filterActive   = !empty($selectedDate) || !empty($selectedWeek) || !empty($selectedMonth);
+$activeFilter   = '';
+
+if (!empty($selectedDate)) {
+    $activeFilter = 'date';
+}
+if (!empty($selectedWeek)) {
+    $activeFilter = 'week';
+}
+if (!empty($selectedMonth)) {
+    $activeFilter = 'month';
+}
 
 // Limit automatisch auf 'ALLE' bei Filter
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
-$selectedLimit = $_GET['limit'] ?? ($filterActive ? 'ALLE' : 10);
+$selectedLimit = $_GET['limit'] ?? ($activeFilter ? 'ALLE' : 10);
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
 // Filterlogik
 $dateCondition = '';
-if (!empty($selectedMonth)) {
+if ($activeFilter === 'month') {
     $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y');
-    $selectedDate = $selectedWeek = '';
-} elseif (!empty($selectedWeek)) {
+} elseif ($activeFilter === 'week') {
     $dateCondition = "WHERE WEEK(datum, 1) = " . intval($selectedWeek) . " AND YEAR(datum) = " . date('Y');
-    $selectedDate = $selectedMonth = '';
-} elseif (!empty($selectedDate)) {
+} elseif ($activeFilter === 'date') {
     $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
     if ($dateObj) {
         $formattedDate = $dateObj->format('Y-m-d');
         $dateCondition = "WHERE datum = '$formattedDate'";
     }
-    $selectedWeek = $selectedMonth = '';
 }
 
 // Löschvorgang
@@ -61,7 +68,7 @@ echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: w
 echo "<label for='limit'>Anzahl Einträge:</label> ";
 echo "<select name='limit' onchange='this.form.submit()'>";
 foreach ($limitOptions as $option) {
-    $selected = ($selectedLimit == $option) ? "selected" : "";
+    $selected = ($selectedLimit == $option || ($activeFilter && !isset($_GET['limit']) && $option === 'ALLE')) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
 }
 echo "</select>";
@@ -102,18 +109,18 @@ for ($i = 0; $i < 8; $i++) {
 echo "</select>";
 
 // Filter aufheben
-if ($filterActive) {
+if ($activeFilter) {
     echo "<a href='?limit=10' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
 echo "</form>";
 
 // Überschrift
-if (!empty($selectedDate)) {
+if ($activeFilter === 'date') {
     echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
-} elseif (!empty($selectedWeek)) {
+} elseif ($activeFilter === 'week') {
     echo "<h3>Einträge für KW $selectedWeek:</h3>";
-} elseif (!empty($selectedMonth)) {
+} elseif ($activeFilter === 'month') {
     echo "<h3>Einträge für Monat " . date('F', mktime(0, 0, 0, $selectedMonth, 10)) . ":</h3>";
 } else {
     echo "<h3>Letzte Einträge:</h3>";
@@ -169,7 +176,3 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "</form>";
 } else {
     echo "<p>Keine Einträge gefunden.</p>";
-}
-
-mysqli_close($conn);
-?>
