@@ -9,6 +9,17 @@ $limitOptions = [10, 25, 50, 100, 'ALLE'];
 $selectedLimit = $_GET['limit'] ?? 10;
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
+// Datumsfilter
+$selectedDate = $_GET['filter_date'] ?? '';
+$dateCondition = '';
+if (!empty($selectedDate)) {
+    $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
+    if ($dateObj) {
+        $formattedDate = $dateObj->format('Y-m-d');
+        $dateCondition = "WHERE datum = '$formattedDate'";
+    }
+}
+
 // Löschvorgang
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
     $idsToDelete = array_map('intval', $_POST['delete_ids']);
@@ -21,18 +32,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
 
 // Einträge abrufen
 $limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
-$sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC $limitClause";
+$sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limitClause";
 $result = mysqli_query($conn, $sql);
 
 // Auswahlformular
-echo "<form method='GET' style='margin-bottom: 10px;'>";
-echo "<label for='limit'>Anzahl Einträge anzeigen:</label> ";
-echo "<select name='limit' id='limit' onchange='this.form.submit()'>";
+echo "<form method='GET' style='margin-bottom: 10px; display: flex; gap: 20px; align-items: center;'>";
+
+// Limit-Auswahl
+echo "<label for='limit'>Anzahl Einträge:</label> ";
+echo "<select name='limit' id='limit'>";
 foreach ($limitOptions as $option) {
     $selected = ($selectedLimit == $option) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
 }
 echo "</select>";
+
+// Datumsfilter
+echo "<label for='filter_date'>Datum filtern:</label> ";
+echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($selectedDate) . "'>";
+
+echo "<button type='submit'>Filtern</button>";
 echo "</form>";
 
 echo "<h3>Letzte Einträge:</h3>";
@@ -54,41 +73,4 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<tr>";
     echo "<th style='width:30px; border: 1px solid #ccc; padding: 4px;'>🗑️</th>";
     foreach ($columnConfig as $key => $config) {
-        echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
-    }
-    echo "</tr>";
-
-    // Datenzeilen
-    while ($row = mysqli_fetch_assoc($result)) {
-        echo "<tr>";
-        echo "<td style='border: 1px solid #ccc; padding: 4px; text-align: center;'>
-                <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
-              </td>";
-        foreach ($columnConfig as $key => $config) {
-            $value = htmlspecialchars($row[$key] ?? '');
-            if ($key === 'bemerkung' && strlen($value) > 150) {
-                $value = substr($value, 0, 147) . '...';
-            }
-            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
-                $value = substr($value, 0, 5);
-            }
-            if ($key === 'datum' && !empty($value)) {
-                $dateObj = DateTime::createFromFormat('Y-m-d', $value);
-                if ($dateObj) {
-                    $value = $dateObj->format('d.m.Y');
-                }
-            }
-            echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
-        }
-        echo "</tr>";
-    }
-
-    echo "</table>";
-    echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
-    echo "</form>";
-} else {
-    echo "<p>Keine Einträge gefunden.</p>";
-}
-
-mysqli_close($conn);
-?>
+        echo
