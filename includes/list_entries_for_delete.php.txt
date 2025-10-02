@@ -4,19 +4,19 @@ $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
-// Auswahl für Anzahl der Einträge
-$limitOptions = [10, 25, 50, 100, 'ALLE'];
-$filterActive = !empty($_GET['filter_date']) || !empty($_GET['filter_week']) || !empty($_GET['filter_month']);
-$selectedLimit = $_GET['limit'] ?? ($filterActive ? 'ALLE' : 10);
-$selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
-
 // Filterparameter
 $selectedDate   = $_GET['filter_date'] ?? '';
 $selectedWeek   = $_GET['filter_week'] ?? '';
 $selectedMonth  = $_GET['filter_month'] ?? '';
-$dateCondition  = '';
+$filterActive   = !empty($selectedDate) || !empty($selectedWeek) || !empty($selectedMonth);
 
-// Priorität: Monat > Woche > Datum
+// Limit automatisch auf 'ALLE' bei Filter
+$limitOptions = [10, 25, 50, 100, 'ALLE'];
+$selectedLimit = $_GET['limit'] ?? ($filterActive ? 'ALLE' : 10);
+$selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
+
+// Filterlogik
+$dateCondition = '';
 if (!empty($selectedMonth)) {
     $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y');
     $selectedDate = $selectedWeek = '';
@@ -59,7 +59,7 @@ echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: w
 
 // Limit-Auswahl
 echo "<label for='limit'>Anzahl Einträge:</label> ";
-echo "<select name='limit' id='limit'>";
+echo "<select name='limit' onchange='this.form.submit()'>";
 foreach ($limitOptions as $option) {
     $selected = ($selectedLimit == $option) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
@@ -68,19 +68,19 @@ echo "</select>";
 
 // Datumsfilter
 echo "<label for='filter_date'>Datum:</label>";
-echo "<div style='display: flex; gap: 5px; align-items: center;'>";
-echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($selectedDate) . "'>";
+echo "<input type='date' name='filter_date' value='" . htmlspecialchars($selectedDate) . "' onchange='this.form.submit()'>";
+
+// Zurück/Vor Buttons
 if (!empty($selectedDate)) {
+    echo "<a href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
     if ($formattedDate < $today) {
         echo "<a href='?filter_date=$tomorrow&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
     }
-    echo "<a href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
 }
-echo "</div>";
 
 // Wochenfilter
 echo "<label for='filter_week'>Wochenfilter:</label>";
-echo "<select name='filter_week' id='filter_week' onchange='this.form.submit()'>";
+echo "<select name='filter_week' onchange='this.form.submit()'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $weekNum = date('W', strtotime("-$i week"));
@@ -91,7 +91,7 @@ echo "</select>";
 
 // Monatsfilter
 echo "<label for='filter_month'>Monatsfilter:</label>";
-echo "<select name='filter_month' id='filter_month' onchange='this.form.submit()'>";
+echo "<select name='filter_month' onchange='this.form.submit()'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $monthNum = date('n', strtotime("-$i month"));
@@ -103,10 +103,9 @@ echo "</select>";
 
 // Filter aufheben
 if ($filterActive) {
-    echo "<a href='?limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
+    echo "<a href='?limit=10' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
-echo "<button type='submit'>Filtern</button>";
 echo "</form>";
 
 // Überschrift
@@ -132,20 +131,18 @@ if ($result && mysqli_num_rows($result) > 0) {
     ];
 
     echo "<form method='POST'>";
-    echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
+    echo "<table style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
 
-    // Tabellenkopf
     echo "<tr>";
-    echo "<th style='width:30px; border: 1px solid #ccc; padding: 4px;'>🗑️</th>";
+    echo "<th style='width:30px; border: 1px solid #ccc;'>🗑️</th>";
     foreach ($columnConfig as $key => $config) {
-        echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+        echo "<th style='width:{$config['width']}; border: 1px solid #ccc;'>{$config['label']}</th>";
     }
     echo "</tr>";
 
-    // Datenzeilen
     while ($row = mysqli_fetch_assoc($result)) {
         echo "<tr>";
-        echo "<td style='border: 1px solid #ccc; padding: 4px; text-align: center;'>
+        echo "<td style='border: 1px solid #ccc; text-align: center;'>
                 <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
               </td>";
         foreach ($columnConfig as $key => $config) {
@@ -162,7 +159,7 @@ if ($result && mysqli_num_rows($result) > 0) {
                     $value = $dateObj->format('d.m.Y');
                 }
             }
-            echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+            echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
         }
         echo "</tr>";
     }
