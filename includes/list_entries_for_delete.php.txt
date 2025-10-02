@@ -73,4 +73,41 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<tr>";
     echo "<th style='width:30px; border: 1px solid #ccc; padding: 4px;'>🗑️</th>";
     foreach ($columnConfig as $key => $config) {
-        echo
+        echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+    }
+    echo "</tr>";
+
+    // Datenzeilen
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>";
+        echo "<td style='border: 1px solid #ccc; padding: 4px; text-align: center;'>
+                <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
+              </td>";
+        foreach ($columnConfig as $key => $config) {
+            $value = htmlspecialchars($row[$key] ?? '');
+            if ($key === 'bemerkung' && strlen($value) > 150) {
+                $value = substr($value, 0, 147) . '...';
+            }
+            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                $value = substr($value, 0, 5);
+            }
+            if ($key === 'datum' && !empty($value)) {
+                $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+                if ($dateObj) {
+                    $value = $dateObj->format('d.m.Y');
+                }
+            }
+            echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+        }
+        echo "</tr>";
+    }
+
+    echo "</table>";
+    echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
+    echo "</form>";
+} else {
+    echo "<p>Keine Einträge gefunden.</p>";
+}
+
+mysqli_close($conn);
+?>
