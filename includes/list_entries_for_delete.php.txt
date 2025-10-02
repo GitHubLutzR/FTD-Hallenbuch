@@ -9,27 +9,16 @@ $limitOptions = [10, 25, 50, 100, 'ALLE'];
 $selectedLimit = $_GET['limit'] ?? 10;
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
-// Datumsfilter mit Navigation
-echo "<label for='filter_date'>Datum:</label> ";
-echo "<div style='display: flex; gap: 5px; align-items: center;'>";
-
-// Zurück-Button
-echo "<a href='?filter_date=$yesterday&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
-
-// Datepicker
-echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($formattedDate) . "'>";
-
-// Vor-Button (nur wenn nicht heute oder später)
-if (!empty($selectedDate) && $formattedDate < $today) {
-    echo "<a href='?filter_date=$tomorrow&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
-}
-
-// Datumsfilter aufheben
+// Datumsfilter
+$selectedDate = $_GET['filter_date'] ?? '';
+$dateCondition = '';
 if (!empty($selectedDate)) {
-    echo "<a href='?limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Datumsfilter aufheben</a>";
+    $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
+    if ($dateObj) {
+        $formattedDate = $dateObj->format('Y-m-d');
+        $dateCondition = "WHERE datum = '$formattedDate'";
+    }
 }
-
-echo "</div>";
 
 // Löschvorgang
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
@@ -47,9 +36,11 @@ $sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limit
 $result = mysqli_query($conn, $sql);
 
 // Datum zurück / vor berechnen
-$yesterday = (clone $dateObj)->modify('-1 day')->format('Y-m-d');
-$tomorrow = (clone $dateObj)->modify('+1 day')->format('Y-m-d');
-$today = date('Y-m-d');
+if (!empty($selectedDate) && isset($dateObj)) {
+    $yesterday = (clone $dateObj)->modify('-1 day')->format('Y-m-d');
+    $tomorrow = (clone $dateObj)->modify('+1 day')->format('Y-m-d');
+    $today = date('Y-m-d');
+}
 
 // Auswahlformular
 echo "<form method='GET' style='margin-bottom: 10px; display: flex; gap: 20px; align-items: center;'>";
@@ -63,10 +54,26 @@ foreach ($limitOptions as $option) {
 }
 echo "</select>";
 
+// Datumsfilter mit Navigation
+echo "<label for='filter_date'>Datum:</label> ";
+echo "<div style='display: flex; gap: 5px; align-items: center;'>";
+
+if (!empty($selectedDate)) {
+    echo "<a href='?filter_date=$yesterday&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
+    echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($formattedDate) . "'>";
+    if ($formattedDate < $today) {
+        echo "<a href='?filter_date=$tomorrow&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
+    }
+    echo "<a href='?limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Datumsfilter aufheben</a>";
+} else {
+    echo "<input type='date' name='filter_date' id='filter_date'>";
+}
+
 echo "</div>";
 echo "<button type='submit'>Filtern</button>";
 echo "</form>";
 
+// Überschrift
 if (!empty($selectedDate)) {
     echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
 } else {
