@@ -9,15 +9,26 @@ $limitOptions = [10, 25, 50, 100, 'ALLE'];
 $selectedLimit = $_GET['limit'] ?? 10;
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
-// Datumsfilter
-$selectedDate = $_GET['filter_date'] ?? '';
-$dateCondition = '';
-if (!empty($selectedDate)) {
+// Filterparameter
+$selectedDate   = $_GET['filter_date'] ?? '';
+$selectedWeek   = $_GET['filter_week'] ?? '';
+$selectedMonth  = $_GET['filter_month'] ?? '';
+$dateCondition  = '';
+
+// Priorität: Monat > Woche > Datum
+if (!empty($selectedMonth)) {
+    $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y');
+    $selectedDate = $selectedWeek = '';
+} elseif (!empty($selectedWeek)) {
+    $dateCondition = "WHERE WEEK(datum, 1) = " . intval($selectedWeek) . " AND YEAR(datum) = " . date('Y');
+    $selectedDate = $selectedMonth = '';
+} elseif (!empty($selectedDate)) {
     $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
     if ($dateObj) {
         $formattedDate = $dateObj->format('Y-m-d');
         $dateCondition = "WHERE datum = '$formattedDate'";
     }
+    $selectedWeek = $selectedMonth = '';
 }
 
 // Löschvorgang
@@ -38,12 +49,12 @@ $result = mysqli_query($conn, $sql);
 // Datum zurück / vor berechnen
 if (!empty($selectedDate) && isset($dateObj)) {
     $yesterday = (clone $dateObj)->modify('-1 day')->format('Y-m-d');
-    $tomorrow = (clone $dateObj)->modify('+1 day')->format('Y-m-d');
-    $today = date('Y-m-d');
+    $tomorrow  = (clone $dateObj)->modify('+1 day')->format('Y-m-d');
+    $today     = date('Y-m-d');
 }
 
 // Auswahlformular
-echo "<form method='GET' style='margin-bottom: 10px; display: flex; gap: 20px; align-items: center;'>";
+echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
 
 // Limit-Auswahl
 echo "<label for='limit'>Anzahl Einträge:</label> ";
@@ -54,32 +65,61 @@ foreach ($limitOptions as $option) {
 }
 echo "</select>";
 
-// Datumsfilter mit Navigation
-echo "<label for='filter_date'>Datum:</label> ";
+// Datumsfilter
+echo "<label for='filter_date'>Datum:</label>";
 echo "<div style='display: flex; gap: 5px; align-items: center;'>";
-
+echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($selectedDate) . "'>";
 if (!empty($selectedDate)) {
-    echo "<a href='?filter_date=$yesterday&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
-    echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($formattedDate) . "'>";
     if ($formattedDate < $today) {
-        echo "<a href='?filter_date=$tomorrow&limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
+        echo "<a href='?filter_date=$tomorrow&limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
     }
-    echo "<a href='?limit=$selectedLimit' style='text-decoration: none; padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Datumsfilter aufheben</a>";
-} else {
-    echo "<input type='date' name='filter_date' id='filter_date'>";
+    echo "<a href='?filter_date=$yesterday&limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
+}
+echo "</div>";
+
+// Wochenfilter
+echo "<label for='filter_week'>Wochenfilter:</label>";
+echo "<select name='filter_week' id='filter_week'>";
+echo "<option value=''>–</option>";
+for ($i = 0; $i < 8; $i++) {
+    $weekNum = date('W', strtotime("-$i week"));
+    $selected = ($selectedWeek == $weekNum) ? "selected" : "";
+    echo "<option value='$weekNum' $selected>KW $weekNum</option>";
+}
+echo "</select>";
+
+// Monatsfilter
+echo "<label for='filter_month'>Monatsfilter:</label>";
+echo "<select name='filter_month' id='filter_month'>";
+echo "<option value=''>–</option>";
+for ($i = 0; $i < 8; $i++) {
+    $monthNum = date('n', strtotime("-$i month"));
+    $monthName = date('F', strtotime("-$i month"));
+    $selected = ($selectedMonth == $monthNum) ? "selected" : "";
+    echo "<option value='$monthNum' $selected>$monthName</option>";
+}
+echo "</select>";
+
+// Filter aufheben
+if (!empty($selectedDate) || !empty($selectedWeek) || !empty($selectedMonth)) {
+    echo "<a href='?limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
-echo "</div>";
 echo "<button type='submit'>Filtern</button>";
 echo "</form>";
 
 // Überschrift
 if (!empty($selectedDate)) {
     echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
+} elseif (!empty($selectedWeek)) {
+    echo "<h3>Einträge für KW $selectedWeek:</h3>";
+} elseif (!empty($selectedMonth)) {
+    echo "<h3>Einträge für Monat " . date('F', mktime(0, 0, 0, $selectedMonth, 10)) . ":</h3>";
 } else {
     echo "<h3>Letzte Einträge:</h3>";
 }
 
+// Tabelle
 if ($result && mysqli_num_rows($result) > 0) {
     $columnConfig = [
         'datum'     => ['label' => 'Datum',     'width' => '80px'],
@@ -126,6 +166,8 @@ if ($result && mysqli_num_rows($result) > 0) {
         echo "</tr>";
     }
 
+    echo "</table>";
+    echo "<br><button type='
     echo "</table>";
     echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
     echo "</form>";
