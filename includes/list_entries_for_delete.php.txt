@@ -56,14 +56,19 @@ if (!empty($selectedDate) && isset($dateObj)) {
 // Auswahlformular
 echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
 
-// Limit-Auswahl
-echo "<label for='limit'>Anzahl Einträge:</label> ";
-echo "<select name='limit' id='limit'>";
-foreach ($limitOptions as $option) {
-    $selected = ($selectedLimit == $option) ? "selected" : "";
-    echo "<option value='$option' $selected>$option</option>";
+// Auswahl für Anzahl der Einträge
+$limitOptions = [10, 25, 50, 100, 'ALLE'];
+
+// Prüfen, ob ein Filter aktiv ist
+$filterActive = !empty($_GET['filter_date']) || !empty($_GET['filter_week']) || !empty($_GET['filter_month']);
+
+// Wenn Filter aktiv und kein explizites Limit gesetzt → auf 'ALLE' setzen
+if ($filterActive && !isset($_GET['limit'])) {
+    $selectedLimit = 'ALLE';
+} else {
+    $selectedLimit = $_GET['limit'] ?? 10;
+    $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 }
-echo "</select>";
 
 // Datumsfilter
 echo "<label for='filter_date'>Datum:</label>";
