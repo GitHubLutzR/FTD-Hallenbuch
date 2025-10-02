@@ -167,8 +167,6 @@ if ($result && mysqli_num_rows($result) > 0) {
     }
 
     echo "</table>";
-    echo "<br><button type='
-    echo "</table>";
     echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
     echo "</form>";
 } else {
