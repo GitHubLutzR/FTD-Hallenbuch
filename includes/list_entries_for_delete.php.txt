@@ -56,6 +56,14 @@ if (!empty($selectedDate) && isset($dateObj)) {
 // Auswahlformular
 echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
 
+// Limit-Auswahl
+echo "<label for='limit'>Anzahl Einträge:</label> ";
+echo "<select name='limit' id='limit'>";
+foreach ($limitOptions as $option) {
+    $selected = ($selectedLimit == $option) ? "selected" : "";
+    echo "<option value='$option' $selected>$option</option>";
+echo "</select>";
+
 // Auswahl für Anzahl der Einträge
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
 
