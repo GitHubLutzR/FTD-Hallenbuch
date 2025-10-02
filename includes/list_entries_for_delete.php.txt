@@ -6,7 +6,8 @@ $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
 // Auswahl für Anzahl der Einträge
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
-$selectedLimit = $_GET['limit'] ?? 10;
+$filterActive = !empty($_GET['filter_date']) || !empty($_GET['filter_week']) || !empty($_GET['filter_month']);
+$selectedLimit = $_GET['limit'] ?? ($filterActive ? 'ALLE' : 10);
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
 // Filterparameter
@@ -62,22 +63,8 @@ echo "<select name='limit' id='limit'>";
 foreach ($limitOptions as $option) {
     $selected = ($selectedLimit == $option) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
+}
 echo "</select>";
-}
-
-// Auswahl für Anzahl der Einträge
-$limitOptions = [10, 25, 50, 100, 'ALLE'];
-
-// Prüfen, ob ein Filter aktiv ist
-$filterActive = !empty($_GET['filter_date']) || !empty($_GET['filter_week']) || !empty($_GET['filter_month']);
-
-// Wenn Filter aktiv und kein explizites Limit gesetzt → auf 'ALLE' setzen
-if ($filterActive && !isset($_GET['limit'])) {
-    $selectedLimit = 'ALLE';
-} else {
-    $selectedLimit = $_GET['limit'] ?? 10;
-    $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
-}
 
 // Datumsfilter
 echo "<label for='filter_date'>Datum:</label>";
@@ -85,15 +72,15 @@ echo "<div style='display: flex; gap: 5px; align-items: center;'>";
 echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($selectedDate) . "'>";
 if (!empty($selectedDate)) {
     if ($formattedDate < $today) {
-        echo "<a href='?filter_date=$tomorrow&limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
+        echo "<a href='?filter_date=$tomorrow&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
     }
-    echo "<a href='?filter_date=$yesterday&limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
+    echo "<a href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
 }
 echo "</div>";
 
 // Wochenfilter
 echo "<label for='filter_week'>Wochenfilter:</label>";
-echo "<select name='filter_week' id='filter_week'>";
+echo "<select name='filter_week' id='filter_week' onchange='this.form.submit()'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $weekNum = date('W', strtotime("-$i week"));
@@ -104,7 +91,7 @@ echo "</select>";
 
 // Monatsfilter
 echo "<label for='filter_month'>Monatsfilter:</label>";
-echo "<select name='filter_month' id='filter_month'>";
+echo "<select name='filter_month' id='filter_month' onchange='this.form.submit()'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $monthNum = date('n', strtotime("-$i month"));
@@ -115,7 +102,7 @@ for ($i = 0; $i < 8; $i++) {
 echo "</select>";
 
 // Filter aufheben
-if (!empty($selectedDate) || !empty($selectedWeek) || !empty($selectedMonth)) {
+if ($filterActive) {
     echo "<a href='?limit=$selectedLimit' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
