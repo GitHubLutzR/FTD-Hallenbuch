@@ -63,6 +63,7 @@ foreach ($limitOptions as $option) {
     $selected = ($selectedLimit == $option) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
 echo "</select>";
+}
 
 // Auswahl für Anzahl der Einträge
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
