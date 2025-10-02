@@ -10,10 +10,15 @@ $selectedLimit = $_GET['limit'] ?? 10;
 $selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
 
 // Datumsfilter
-$selectedDate = $_GET['filter_date'] ?? date('Y-m-d');
-$dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
-$formattedDate = $dateObj ? $dateObj->format('Y-m-d') : date('Y-m-d');
-$dateCondition = "WHERE datum = '$formattedDate'";
+$selectedDate = $_GET['filter_date'] ?? '';
+$dateCondition = '';
+if (!empty($selectedDate)) {
+    $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
+    if ($dateObj) {
+        $formattedDate = $dateObj->format('Y-m-d');
+        $dateCondition = "WHERE datum = '$formattedDate'";
+    }
+}
 
 // Löschvorgang
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
@@ -66,7 +71,11 @@ echo "</div>";
 echo "<button type='submit'>Filtern</button>";
 echo "</form>";
 
-echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
+if (!empty($selectedDate)) {
+    echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
+} else {
+    echo "<h3>Letzte Einträge:</h3>";
+}
 
 if ($result && mysqli_num_rows($result) > 0) {
     $columnConfig = [
