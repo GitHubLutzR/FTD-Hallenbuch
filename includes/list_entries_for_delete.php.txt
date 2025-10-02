@@ -1,0 +1,77 @@
+<?php
+require_once(__DIR__ . '/../config.php');
+$conn = get_db_connection();
+global $hesk_settings;
+$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
+
+// Löschvorgang
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
+    $idsToDelete = array_map('intval', $_POST['delete_ids']);
+    if (!empty($idsToDelete)) {
+        $idList = implode(',', $idsToDelete);
+        $deleteSql = "DELETE FROM $table WHERE id IN ($idList)";
+        mysqli_query($conn, $deleteSql);
+    }
+}
+
+// Einträge abrufen
+$sql = "SELECT * FROM $table ORDER BY datum DESC, von DESC LIMIT 10";
+$result = mysqli_query($conn, $sql);
+
+echo "<h3>Letzte Einträge:</h3>";
+
+if ($result && mysqli_num_rows($result) > 0) {
+    $columnConfig = [
+        'datum'     => ['label' => 'Datum',     'width' => '80px'],
+        'von'       => ['label' => 'Von',       'width' => '50px'],
+        'bis'       => ['label' => 'Bis',       'width' => '50px'],
+        'gruppe'    => ['label' => 'Gruppe',    'width' => '100px'],
+        'leiter'    => ['label' => 'Leiter',    'width' => '100px'],
+        'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
+    ];
+
+    echo "<form method='POST'>";
+    echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
+
+    // Tabellenkopf
+    echo "<tr>";
+    echo "<th style='width:30px; border: 1px solid #ccc; padding: 4px;'>🗑️</th>";
+    foreach ($columnConfig as $key => $config) {
+        echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+    }
+    echo "</tr>";
+
+    // Datenzeilen
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>";
+        echo "<td style='border: 1px solid #ccc; padding: 4px; text-align: center;'>
+                <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
+              </td>";
+        foreach ($columnConfig as $key => $config) {
+            $value = htmlspecialchars($row[$key] ?? '');
+            if ($key === 'bemerkung' && strlen($value) > 150) {
+                $value = substr($value, 0, 147) . '...';
+            }
+            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                $value = substr($value, 0, 5);
+            }
+            if ($key === 'datum' && !empty($value)) {
+                $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+                if ($dateObj) {
+                    $value = $dateObj->format('d.m.Y');
+                }
+            }
+            echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+        }
+        echo "</tr>";
+    }
+
+    echo "</table>";
+    echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
+    echo "</form>";
+} else {
+    echo "<p>Keine Einträge gefunden.</p>";
+}
+
+mysqli_close($conn);
+?>
