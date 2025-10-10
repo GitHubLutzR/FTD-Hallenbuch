@@ -19,20 +19,21 @@
 </head>
 <body>
 <?php
+if (isset($_SESSION['user'])) {
+    echo "<div style='text-align:right;'>👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
+    echo "<a href='logout.php'>Logout</a><BR>";
+    echo "<div style='text-align:right;'><a href='admin/admin_menu.php'>Admin-Menü</a></div><BR><BR>";
+    echo "<form method='post' style='display:inline;'>
+            <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
+          </form></div>";
+} else {
+    echo "<div style='text-align:right;'><a href='login.php'>🔐 Admin-Login</a></div>";
+} 
 if (isset($_POST['reset_session'])) {
     unset($_SESSION['eintrags_count']);
     unset($_SESSION['eintrags_reset']); // falls du eine Zeitsteuerung nutzt
-    echo "<p>✅ Eintragszähler wurde zurückgesetzt.</p>";
+    echo "<div style='text-align:right;'><p>✅ Eintragszähler wurde zurückgesetzt.</p></div>";
 }
-if (isset($_SESSION['user'])) {
-    echo "👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
-    echo "<a href='logout.php'>Logout</a><BR>";
-    echo "<form method='post' style='display:inline;'>
-            <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
-          </form>";
-} else {
-    echo "<a href='login.php'>🔐 Admin-Login</a>";
-} 
 ?>
 <header>
     <h1>FTD Hallenbuch</h1>

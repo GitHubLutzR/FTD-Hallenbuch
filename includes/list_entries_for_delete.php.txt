@@ -1,0 +1,182 @@
+<?php
+require_once(__DIR__ . '/../config.php');
+$conn = get_db_connection();
+global $hesk_settings;
+$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
+
+// Filterparameter
+$selectedDate   = $_GET['filter_date'] ?? '';
+$selectedWeek   = $_GET['filter_week'] ?? '';
+$selectedMonth  = $_GET['filter_month'] ?? '';
+$activeFilter   = '';
+
+if (!empty($selectedDate)) {
+    $activeFilter = 'date';
+}
+if (!empty($selectedWeek)) {
+    $activeFilter = 'week';
+}
+if (!empty($selectedMonth)) {
+    $activeFilter = 'month';
+}
+
+// Limit automatisch auf 'ALLE' bei Filter
+$limitOptions = [10, 25, 50, 100, 'ALLE'];
+$selectedLimit = $_GET['limit'] ?? ($activeFilter ? 'ALLE' : 10);
+$selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
+
+// Filterlogik
+$dateCondition = '';
+if ($activeFilter === 'month') {
+    $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y');
+} elseif ($activeFilter === 'week') {
+    $dateCondition = "WHERE WEEK(datum, 1) = " . intval($selectedWeek) . " AND YEAR(datum) = " . date('Y');
+} elseif ($activeFilter === 'date') {
+    $dateObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
+    if ($dateObj) {
+        $formattedDate = $dateObj->format('Y-m-d');
+        $dateCondition = "WHERE datum = '$formattedDate'";
+    }
+}
+
+// Löschvorgang
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
+    $idsToDelete = array_map('intval', $_POST['delete_ids']);
+    if (!empty($idsToDelete)) {
+        $idList = implode(',', $idsToDelete);
+        $deleteSql = "DELETE FROM $table WHERE id IN ($idList)";
+        mysqli_query($conn, $deleteSql);
+    }
+}
+
+// Einträge abrufen
+$limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
+$sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limitClause";
+$result = mysqli_query($conn, $sql);
+
+// Datum zurück / vor berechnen
+if (!empty($selectedDate) && isset($dateObj)) {
+    $yesterday = (clone $dateObj)->modify('-1 day')->format('Y-m-d');
+    $tomorrow  = (clone $dateObj)->modify('+1 day')->format('Y-m-d');
+    $today     = date('Y-m-d');
+}
+
+// Auswahlformular
+echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
+
+// Limit-Auswahl
+echo "<label for='limit'>Anzahl Einträge:</label> ";
+echo "<select name='limit' onchange='this.form.submit()'>";
+foreach ($limitOptions as $option) {
+    $selected = ($selectedLimit == $option || ($activeFilter && !isset($_GET['limit']) && $option === 'ALLE')) ? "selected" : "";
+    echo "<option value='$option' $selected>$option</option>";
+}
+echo "</select>";
+
+// Datumsfilter
+echo "<label for='filter_date'>Datum:</label>";
+echo "<input type='date' name='filter_date' value='" . htmlspecialchars($selectedDate) . "' onchange='this.form.submit()'>";
+
+// Zurück/Vor Buttons
+if (!empty($selectedDate)) {
+    echo "<a href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
+    if ($formattedDate < $today) {
+        echo "<a href='?filter_date=$tomorrow&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
+    }
+}
+
+// Wochenfilter
+echo "<label for='filter_week'>Wochenfilter:</label>";
+echo "<select name='filter_week' onchange='this.form.submit()'>";
+echo "<option value=''>–</option>";
+for ($i = 0; $i < 8; $i++) {
+    $weekNum = date('W', strtotime("-$i week"));
+    $selected = ($selectedWeek == $weekNum) ? "selected" : "";
+    echo "<option value='$weekNum' $selected>KW $weekNum</option>";
+}
+echo "</select>";
+
+// Monatsfilter
+echo "<label for='filter_month'>Monatsfilter:</label>";
+echo "<select name='filter_month' onchange='this.form.submit()'>";
+echo "<option value=''>–</option>";
+for ($i = 0; $i < 8; $i++) {
+    $monthNum = date('n', strtotime("-$i month"));
+    $monthName = date('F', strtotime("-$i month"));
+    $selected = ($selectedMonth == $monthNum) ? "selected" : "";
+    echo "<option value='$monthNum' $selected>$monthName</option>";
+}
+echo "</select>";
+
+// Filter aufheben
+if ($activeFilter) {
+    echo "<a href='?limit=10' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
+}
+
+echo "</form>";
+
+// Überschrift
+if ($activeFilter === 'date') {
+    echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
+} elseif ($activeFilter === 'week') {
+    echo "<h3>Einträge für KW $selectedWeek:</h3>";
+} elseif ($activeFilter === 'month') {
+    echo "<h3>Einträge für Monat " . date('F', mktime(0, 0, 0, $selectedMonth, 10)) . ":</h3>";
+} else {
+    echo "<h3>Letzte Einträge:</h3>";
+}
+
+// Tabelle
+if ($result && mysqli_num_rows($result) > 0) {
+    $columnConfig = [
+        'datum'     => ['label' => 'Datum',     'width' => '80px'],
+        'von'       => ['label' => 'Von',       'width' => '50px'],
+        'bis'       => ['label' => 'Bis',       'width' => '50px'],
+        'gruppe'    => ['label' => 'Gruppe',    'width' => '100px'],
+        'leiter'    => ['label' => 'Leiter',    'width' => '100px'],
+        'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
+    ];
+
+    echo "<form method='POST'>";
+    echo "<table style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
+
+    echo "<tr>";
+    echo "<th style='width:30px; border: 1px solid #ccc;'>🗑️</th>";
+    foreach ($columnConfig as $key => $config) {
+        echo "<th style='width:{$config['width']}; border: 1px solid #ccc;'>{$config['label']}</th>";
+    }
+    echo "</tr>";
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>";
+        echo "<td style='border: 1px solid #ccc; text-align: center;'>
+                <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
+              </td>";
+        foreach ($columnConfig as $key => $config) {
+            $value = htmlspecialchars($row[$key] ?? '');
+            if ($key === 'bemerkung' && strlen($value) > 150) {
+                $value = substr($value, 0, 147) . '...';
+            }
+            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                $value = substr($value, 0, 5);
+            }
+            if ($key === 'datum' && !empty($value)) {
+                $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+                if ($dateObj) {
+                    $value = $dateObj->format('d.m.Y');
+                }
+            }
+            echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
+        }
+        echo "</tr>";
+    }
+
+    echo "</table>";
+    echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
+    echo "</form>";
+} else {
+    echo "<p>Keine Einträge gefunden.</p>";
+}
+
+mysqli_close($conn);
+?>
