@@ -1,3 +1,4 @@
+<?php
 <?php 
 session_start();
 
@@ -108,7 +109,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   </div>
 
   <div class="form-row">
-    <label for="extraGruppe">Extra-Gruppe:</label>
+    <label for="extraGruppe">Extra-Gruppen:</label>
     <select id="extraGruppeSelect">
       <option value="">Bitte wählen</option>
       <?php
@@ -129,37 +130,45 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   <input type="hidden" name="extraGruppe" id="extraGruppeHidden">
 
   <script>
-    // Maximal eine Extra-Gruppe
-    let extraGruppe = "";
+    // Maximal zwei Extra-Gruppen
+    let extraGruppen = [];
 
     document.getElementById('addExtraGruppe').addEventListener('click', function() {
       const select = document.getElementById('extraGruppeSelect');
       const value = select.value;
       if (!value) return;
-      if (extraGruppe) {
-        alert("Es kann nur eine Extra-Gruppe ausgewählt werden. Bitte zuerst leeren.");
+      if (extraGruppen.length >= 2) {
+        alert("Es können maximal zwei Extra-Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
         return;
       }
-      extraGruppe = value;
-      document.getElementById('extraGruppeList').innerHTML =
-        `<li>${value} <button type="button" onclick="removeExtraGruppe()">Entfernen</button></li>`;
-      document.getElementById('extraGruppeHidden').value = value;
-      document.getElementById('extraGruppeStar').style.display = 'inline';
+      if (extraGruppen.includes(value)) {
+        alert("Diese Gruppe wurde bereits hinzugefügt.");
+        return;
+      }
+      extraGruppen.push(value);
+      updateExtraGruppeList();
     });
 
     document.getElementById('clearExtraGruppe').addEventListener('click', function() {
-      extraGruppe = "";
-      document.getElementById('extraGruppeList').innerHTML = "";
-      document.getElementById('extraGruppeHidden').value = "";
-      document.getElementById('extraGruppeStar').style.display = 'none';
+      extraGruppen = [];
+      updateExtraGruppeList();
     });
 
-    window.removeExtraGruppe = function() {
-      extraGruppe = "";
-      document.getElementById('extraGruppeList').innerHTML = "";
-      document.getElementById('extraGruppeHidden').value = "";
-      document.getElementById('extraGruppeStar').style.display = 'none';
+    window.removeExtraGruppe = function(idx) {
+      extraGruppen.splice(idx, 1);
+      updateExtraGruppeList();
     };
+
+    function updateExtraGruppeList() {
+      const list = document.getElementById('extraGruppeList');
+      list.innerHTML = "";
+      extraGruppen.forEach((g, idx) => {
+        list.innerHTML += `<li>${g} <button type="button" onclick="removeExtraGruppe(${idx})">Entfernen</button></li>`;
+      });
+      // Zusammenfassen mit /
+      document.getElementById('extraGruppeHidden').value = extraGruppen.join('/');
+      document.getElementById('extraGruppeStar').style.display = extraGruppen.length ? 'inline' : 'none';
+    }
   </script>
 
   <div class="form-row">
