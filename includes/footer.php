@@ -10,7 +10,7 @@ if ($hesk_settings['debug']) {
         print_r(json_decode($decoded, true));
         echo "</pre>";
     }
-    echo "<pre>";
+    echo "<pre>\$_SESSION:\n";
     print_r($_SESSION);
     echo "</pre>";
 }
