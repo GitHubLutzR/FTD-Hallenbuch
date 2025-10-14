@@ -135,6 +135,10 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
       // Zusammenfassen mit /
       document.getElementById('GruppeHidden').value = Gruppen.join('/');
       document.getElementById('GruppePreview').innerText = "Aktueller Wert: " + Gruppen.join('/');
+      // Optional: Sternchen anzeigen, falls vorhanden
+      if (document.getElementById('GruppeStar')) {
+        document.getElementById('GruppeStar').style.display = Gruppen.length ? 'inline' : 'none';
+      }
     }
 
     document.getElementById('addGruppe').addEventListener('click', function() {
@@ -163,16 +167,6 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
       updateGruppeList();
     };
 
-    function updateGruppeList() {
-      const list = document.getElementById('GruppeList');
-      list.innerHTML = "";
-      Gruppen.forEach((g, idx) => {
-        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
-      });
-      // Zusammenfassen mit /
-      document.getElementById('GruppeHidden').value = Gruppen.join('/');
-      document.getElementById('GruppeStar').style.display = Gruppen.length ? 'inline' : 'none';
-    }
   </script>
 
   <div class="form-row">
