@@ -104,7 +104,6 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <select id="GruppeSelect" >
       <option value="">Bitte wählen</option>
       <?php
-      // Nochmals alle Gruppen für das Extra-Feld
       $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
       while ($row = mysqli_fetch_assoc($result)) {
           $g = htmlspecialchars($row['name']);
@@ -166,7 +165,8 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
       Gruppen.splice(idx, 1);
       updateGruppeList();
     };
-
+    // Initialer Aufruf, damit der Text angezeigt wird
+    updateGruppeList();
   </script>
 
   <div class="form-row">
