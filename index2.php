@@ -111,6 +111,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <button type="button" id="clearGruppe">🗑️ Leeren</button>
     <?php //<span class="required-star" id="GruppeStar" style="display:none;">*</span>?>
     <span class="required-star">*</span>
+    <span> max. 2 Gruppen</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
   <!-- Hidden field for submit -->

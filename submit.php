@@ -68,6 +68,11 @@ $gruppe_sonstige = htmlentities($_POST['gruppe_sonstige'] ?? '', ENT_QUOTES, 'UT
 // Pflichtfeldprüfung
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
+    if ($hesk_settings['debug']) {
+        echo "<pre>Übermittelte Formulardaten:\n";
+        print_r($_POST);
+        echo "</pre>";
+    }  
     exit;
 }
 
@@ -76,6 +81,11 @@ if (strtolower($gruppe) === 'sonstige') {
     $gruppe_sonstige = trim($gruppe_sonstige);
     if ($gruppe_sonstige === '') {
         die("❌ Fehler: Bitte Gruppe angeben, wenn 'sonstige' gewählt wurde.");
+        if ($hesk_settings['debug']) {
+        echo "<pre>Übermittelte Formulardaten:\n";
+        print_r($_POST);
+        echo "</pre>";
+    }
     }
     $gruppe = $gruppe_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
 }

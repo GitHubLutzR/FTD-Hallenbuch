@@ -13,6 +13,9 @@ if ($hesk_settings['debug']) {
     echo "<pre>\$_SESSION:\n";
     print_r($_SESSION);
     echo "</pre>";
+    echo "<pre>Übermittelte Formulardaten:\n";
+    print_r($_POST);
+    echo "</pre>";
 }
 ?>
 </body>
