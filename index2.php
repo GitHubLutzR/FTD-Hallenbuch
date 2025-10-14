@@ -119,13 +119,23 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 2 Gruppen</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
-  <!-- Hidden field for submit 
-  <input type="hidden" name="gruppe" id="GruppeHidden" required> -->
-  <input type="text" name="gruppe" id="GruppeHidden" required>
+  <div id="GruppePreview" style="margin-left:100px; color:#555; font-size:0.95em;"></div>
+  <!-- Hidden field for submit --> 
+  <input type="hidden" name="gruppe" id="GruppeHidden" required> 
 
   <script>
     // Maximal zwei Gruppen
     let Gruppen = [];
+    function updateGruppeList() {
+      const list = document.getElementById('GruppeList');
+      list.innerHTML = "";
+      Gruppen.forEach((g, idx) => {
+        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
+      });
+      // Zusammenfassen mit /
+      document.getElementById('GruppeHidden').value = Gruppen.join('/');
+      document.getElementById('GruppePreview').innerText = "Aktueller Wert: " + Gruppen.join('/');
+    }
 
     document.getElementById('addGruppe').addEventListener('click', function() {
       const select = document.getElementById('GruppeSelect');
