@@ -115,7 +115,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
   <!-- Hidden field for submit -->
-  <input type="hidden" name="Gruppe" id="GruppeHidden">
+  <input type="hidden" name="gruppe" id="GruppeHidden">
 
   <script>
     // Maximal zwei Gruppen
