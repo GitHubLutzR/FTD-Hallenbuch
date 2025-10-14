@@ -93,23 +93,8 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="required-star">*</span>
   </div>
   <div class="form-row">
-    <label for="gruppe">Gruppe:</label>
-    <select name="gruppe" id="gruppe" required>
-      <option value="">Bitte wählen</option>
-      <?php
-      $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
-      while ($row = mysqli_fetch_assoc($result)) {
-          $g = htmlspecialchars($row['name']);
-          echo "<option value=\"$g\">$g</option>";
-      }
-      ?>
-    </select>
-    <span class="required-star">*</span>
-  </div>
-
-  <div class="form-row">
-    <label for="extraGruppe">Extra-Gruppen:</label>
-    <select id="extraGruppeSelect">
+    <label for="Gruppe">Gruppen:</label>
+    <select id="GruppeSelect">
       <option value="">Bitte wählen</option>
       <?php
       // Nochmals alle Gruppen für das Extra-Feld
@@ -120,53 +105,53 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
       }
       ?>
     </select>
-    <button type="button" id="addExtraGruppe">➕ Hinzufügen</button>
-    <button type="button" id="clearExtraGruppe">🗑️ Leeren</button>
-    <span class="required-star" id="extraGruppeStar" style="display:none;">*</span>
+    <button type="button" id="addGruppe">➕ Hinzufügen</button>
+    <button type="button" id="clearGruppe">🗑️ Leeren</button>
+    <span class="required-star" id="GruppeStar" style="display:none;">*</span>
   </div>
-  <ul class="extra-group-list" id="extraGruppeList"></ul>
+  <ul class="extra-group-list" id="GruppeList"></ul>
   <!-- Hidden field for submit -->
-  <input type="hidden" name="extraGruppe" id="extraGruppeHidden">
+  <input type="hidden" name="Gruppe" id="GruppeHidden">
 
   <script>
-    // Maximal zwei Extra-Gruppen
-    let extraGruppen = [];
+    // Maximal zwei Gruppen
+    let Gruppen = [];
 
-    document.getElementById('addExtraGruppe').addEventListener('click', function() {
-      const select = document.getElementById('extraGruppeSelect');
+    document.getElementById('addGruppe').addEventListener('click', function() {
+      const select = document.getElementById('GruppeSelect');
       const value = select.value;
       if (!value) return;
-      if (extraGruppen.length >= 2) {
-        alert("Es können maximal zwei Extra-Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
+      if (Gruppen.length >= 2) {
+        alert("Es können maximal zwei Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
         return;
       }
-      if (extraGruppen.includes(value)) {
+      if (Gruppen.includes(value)) {
         alert("Diese Gruppe wurde bereits hinzugefügt.");
         return;
       }
-      extraGruppen.push(value);
-      updateExtraGruppeList();
+      Gruppen.push(value);
+      updateGruppeList();
     });
 
-    document.getElementById('clearExtraGruppe').addEventListener('click', function() {
-      extraGruppen = [];
-      updateExtraGruppeList();
+    document.getElementById('clearGruppe').addEventListener('click', function() {
+      Gruppen = [];
+      updateGruppeList();
     });
 
-    window.removeExtraGruppe = function(idx) {
-      extraGruppen.splice(idx, 1);
-      updateExtraGruppeList();
+    window.removeGruppe = function(idx) {
+      Gruppen.splice(idx, 1);
+      updateGruppeList();
     };
 
-    function updateExtraGruppeList() {
-      const list = document.getElementById('extraGruppeList');
+    function updateGruppeList() {
+      const list = document.getElementById('GruppeList');
       list.innerHTML = "";
-      extraGruppen.forEach((g, idx) => {
-        list.innerHTML += `<li>${g} <button type="button" onclick="removeExtraGruppe(${idx})">Entfernen</button></li>`;
+      Gruppen.forEach((g, idx) => {
+        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
       });
       // Zusammenfassen mit /
-      document.getElementById('extraGruppeHidden').value = extraGruppen.join('/');
-      document.getElementById('extraGruppeStar').style.display = extraGruppen.length ? 'inline' : 'none';
+      document.getElementById('GruppeHidden').value = Gruppen.join('/');
+      document.getElementById('GruppeStar').style.display = Gruppen.length ? 'inline' : 'none';
     }
   </script>
 
