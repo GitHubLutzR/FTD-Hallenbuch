@@ -4,7 +4,6 @@ session_start();
 require_once 'includes/header.php'; 
 require_once(__DIR__ . '/config.php');
 
-
 if (isset($_GET['rcsubmit'])) {
     if ($_GET['rcsubmit'] == 1) {
         echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";
@@ -17,18 +16,12 @@ if (isset($_GET['rcsubmit'])) {
     }
 }
 
-?>
-<div style="position:absolute; top:10px; right:10px; font-size:0.9em;">
-<?php
-
 $conn = get_db_connection();
 
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 
 ?>
-</div>
-
 <style>
 .form-row {
   display: flex;
@@ -58,9 +51,38 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   margin-left: 2px;
   vertical-align: super;
 }
+.multi-group-list {
+  margin: 0 0 8px 0;
+  padding: 0;
+  list-style: none;
+  margin-left: 100px;
+}
+.multi-group-list li {
+  display: inline-block;
+  background: #eee;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-right: 6px;
+  font-size: 0.95em;
+}
+.multi-group-list button {
+  background: #c00;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0 4px;
+}
+.smal-txt {
+  font-size: 0.5em;
+  margin-left: 2px;
+  vertical-align: super;
+}
 </style>
 
-<form action="submit.php" method="post">
+<form action="submit.php" method="post" id="hallenbuch-form">
   <div class="form-row">
     <label for="datum">Datum:</label>
     <input type="date" name="datum" id="datum" value="<?= date('Y-m-d') ?>" required>
@@ -77,8 +99,8 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="required-star">*</span>
   </div>
   <div class="form-row">
-    <label for="gruppe">Gruppe:</label>
-    <select name="gruppe" id="gruppe" required>
+    <label for="Gruppe">Gruppen:</label>
+    <select id="GruppeSelect">
       <option value="">Bitte wählen</option>
       <?php
       $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
@@ -88,31 +110,98 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
       }
       ?>
     </select>
+    <button type="button" id="addGruppe">➕ Hinzufügen</button>
+    <button type="button" id="clearGruppe">🗑️ Leeren</button>
     <span class="required-star">*</span>
+    <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 2 Gruppen</span>
   </div>
-
   <div class="form-row" id="gruppe-sonstige-row" style="display:none;">
     <label for="gruppe_sonstige">Bitte Gruppe angeben:</label>
     <input type="text" name="gruppe_sonstige" id="gruppe_sonstige" maxlength="100">
     <span class="required-star">*</span>
   </div>
+  <ul class="multi-group-list" id="GruppeList"></ul>
+  <input type="hidden" name="gruppe" id="GruppeHidden">
+
   <script>
-  document.getElementById('gruppe').addEventListener('change', function () {
-    const sonstigeFeld = document.getElementById('gruppe-sonstige-row');
-    sonstigeFeld.style.display = (this.value.toLowerCase() === 'sonstige') ? 'block' : 'none';
-  });
+    let Gruppen = [];
+
+    function isSonstigeSelected() {
+      return Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige';
+    }
+
+    document.getElementById('addGruppe').addEventListener('click', function() {
+      const select = document.getElementById('GruppeSelect');
+      const value = select.value;
+      if (!value) return;
+      if (Gruppen.length >= 2) {
+        alert("Es können maximal zwei Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
+        return;
+      }
+      if (Gruppen.includes(value)) {
+        alert("Diese Gruppe wurde bereits hinzugefügt.");
+        return;
+      }
+      // Wenn "sonstige" gewählt wird, darf keine weitere Gruppe gewählt werden
+      if (value.toLowerCase() === 'sonstige') {
+        Gruppen = ['sonstige'];
+        updateGruppeList();
+        document.getElementById('GruppeSelect').disabled = true;
+        document.getElementById('addGruppe').disabled = true;
+        document.getElementById('gruppe-sonstige-row').style.display = 'flex';
+        return;
+      }
+      // Wenn bereits "sonstige" gewählt wurde, keine weitere zulassen
+      if (Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige') {
+        alert("Wenn 'sonstige' gewählt wurde, kann keine weitere Gruppe hinzugefügt werden.");
+        return;
+      }
+      Gruppen.push(value);
+      updateGruppeList();
+    });
+
+    document.getElementById('clearGruppe').addEventListener('click', function() {
+      Gruppen = [];
+      updateGruppeList();
+      document.getElementById('GruppeSelect').disabled = false;
+      document.getElementById('addGruppe').disabled = false;
+      document.getElementById('gruppe-sonstige-row').style.display = 'none';
+      document.getElementById('gruppe_sonstige').value = '';
+    });
+
+    window.removeGruppe = function(idx) {
+      Gruppen.splice(idx, 1);
+      updateGruppeList();
+      if (!isSonstigeSelected()) {
+        document.getElementById('GruppeSelect').disabled = false;
+        document.getElementById('addGruppe').disabled = false;
+        document.getElementById('gruppe-sonstige-row').style.display = 'none';
+        document.getElementById('gruppe_sonstige').value = '';
+      }
+    };
+
+    function updateGruppeList() {
+      const list = document.getElementById('GruppeList');
+      list.innerHTML = "";
+      Gruppen.forEach((g, idx) => {
+        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
+      });
+      document.getElementById('GruppeHidden').value = Gruppen.join('/');
+      // Zeige das Freitextfeld nur, wenn "sonstige" gewählt wurde
+      if (isSonstigeSelected()) {
+        document.getElementById('gruppe-sonstige-row').style.display = 'flex';
+      } else {
+        document.getElementById('gruppe-sonstige-row').style.display = 'none';
+        document.getElementById('gruppe_sonstige').value = '';
+      }
+    }
   </script>
+
   <div class="form-row">
     <label for="leiter">Leiter: </label>
     <input type="text" name="leiter" id="leiter" required>
     <span class="required-star">*</span>
   </div>
-<!-- 
-  <div class="form-row">
-    <label for="vermerk">Vermerk:</label>
-    <input type="text" name="vermerk" id="vermerk">
-  </div>
--->
   <div class="form-row">
     <label for="bemerkung">Bemerkung:</label>
     <textarea name="bemerkung" id="bemerkung"></textarea>
@@ -124,4 +213,3 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     include 'includes/list_last_entries.php';
     require_once 'includes/footer.php'; 
 ?>
-
