@@ -101,7 +101,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   </div>
   <div class="form-row">
     <label for="Gruppe">Gruppen:</label>
-    <select id="GruppeSelect">
+    <select id="GruppeSelect" required>
       <option value="">Bitte wählen</option>
       <?php
       // Nochmals alle Gruppen für das Extra-Feld
