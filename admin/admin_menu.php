@@ -18,8 +18,5 @@ echo "<ul>
     <li><a href='admin_user_delete.php'>🗑️ Benutzer löschen (manuelle ID nötig)</a></li>
     <li><a href='admin_logout.php'>🚪 Logout</a></li>
 </ul>";
-echo "<pre>";
-print_r($_SESSION);
-echo "</pre>";
 ?>
 
