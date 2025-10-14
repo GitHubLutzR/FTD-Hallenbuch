@@ -107,7 +107,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     </select>
     <button type="button" id="addGruppe">➕ Hinzufügen</button>
     <button type="button" id="clearGruppe">🗑️ Leeren</button>
-    <span class="required-star" id="GruppeStar" style="display:none;">*</span>
+    <?php //<span class="required-star" id="GruppeStar" style="display:none;">*</span>?>
     <span class="required-star">*</span>
   </div>
   <ul class="extra-group-list" id="GruppeList"></ul>
