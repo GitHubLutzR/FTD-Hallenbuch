@@ -121,7 +121,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="required-star">*</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
-  <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen.</div>
+  <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
   <input type="hidden" name="gruppe" id="GruppeHidden">
 
 <script>
