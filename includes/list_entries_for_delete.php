@@ -1,5 +1,13 @@
 <?php
 require_once(__DIR__ . '/../config.php');
+ession_start();
+
+// Zugriffsschutz
+if (!isset($_SESSION['user'])) {
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+    exit;
+}
+
 $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
