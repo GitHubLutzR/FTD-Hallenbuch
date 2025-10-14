@@ -51,12 +51,14 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   margin-left: 2px;
   vertical-align: super;
 }
-.extra-group-list {
+.multi-group-list {
   margin: 0 0 8px 0;
   padding: 0;
   list-style: none;
+    /* Einrückung wie die Felder */
+  margin-left: 100px;
 }
-.extra-group-list li {
+.multi-group-list li {
   display: inline-block;
   background: #eee;
   border-radius: 4px;
@@ -64,7 +66,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   margin-right: 6px;
   font-size: 0.95em;
 }
-.extra-group-list button {
+.multi-group-list button {
   background: #c00;
   color: #fff;
   border: none;
@@ -110,7 +112,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <?php //<span class="required-star" id="GruppeStar" style="display:none;">*</span>?>
     <span class="required-star">*</span>
   </div>
-  <ul class="extra-group-list" id="GruppeList"></ul>
+  <ul class="multi-group-list" id="GruppeList"></ul>
   <!-- Hidden field for submit -->
   <input type="hidden" name="Gruppe" id="GruppeHidden">
 
