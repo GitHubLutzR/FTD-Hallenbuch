@@ -123,11 +123,22 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   <ul class="multi-group-list" id="GruppeList"></ul>
   <input type="hidden" name="gruppe" id="GruppeHidden">
 
-  <script>
+      <script>
+    // Maximal zwei Gruppen
     let Gruppen = [];
-
-    function isSonstigeSelected() {
-      return Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige';
+    function updateGruppeList() {
+      const list = document.getElementById('GruppeList');
+      list.innerHTML = "";
+      Gruppen.forEach((g, idx) => {
+        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
+      });
+      // Zusammenfassen mit /
+      document.getElementById('GruppeHidden').value = Gruppen.join('/');
+      document.getElementById('GruppePreview').innerText = "Aktueller Wert: " + Gruppen.join('/');
+      // Optional: Sternchen anzeigen, falls vorhanden
+      if (document.getElementById('GruppeStar')) {
+        document.getElementById('GruppeStar').style.display = Gruppen.length ? 'inline' : 'none';
+      }
     }
 
     document.getElementById('addGruppe').addEventListener('click', function() {
@@ -142,20 +153,6 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
         alert("Diese Gruppe wurde bereits hinzugefügt.");
         return;
       }
-      // Wenn "sonstige" gewählt wird, darf keine weitere Gruppe gewählt werden
-      if (value.toLowerCase() === 'sonstige') {
-        Gruppen = ['sonstige'];
-        updateGruppeList();
-        document.getElementById('GruppeSelect').disabled = true;
-        document.getElementById('addGruppe').disabled = true;
-        document.getElementById('gruppe-sonstige-row').style.display = 'flex';
-        return;
-      }
-      // Wenn bereits "sonstige" gewählt wurde, keine weitere zulassen
-      if (Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige') {
-        alert("Wenn 'sonstige' gewählt wurde, kann keine weitere Gruppe hinzugefügt werden.");
-        return;
-      }
       Gruppen.push(value);
       updateGruppeList();
     });
@@ -163,38 +160,14 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     document.getElementById('clearGruppe').addEventListener('click', function() {
       Gruppen = [];
       updateGruppeList();
-      document.getElementById('GruppeSelect').disabled = false;
-      document.getElementById('addGruppe').disabled = false;
-      document.getElementById('gruppe-sonstige-row').style.display = 'none';
-      document.getElementById('gruppe_sonstige').value = '';
     });
 
     window.removeGruppe = function(idx) {
       Gruppen.splice(idx, 1);
       updateGruppeList();
-      if (!isSonstigeSelected()) {
-        document.getElementById('GruppeSelect').disabled = false;
-        document.getElementById('addGruppe').disabled = false;
-        document.getElementById('gruppe-sonstige-row').style.display = 'none';
-        document.getElementById('gruppe_sonstige').value = '';
-      }
     };
-
-    function updateGruppeList() {
-      const list = document.getElementById('GruppeList');
-      list.innerHTML = "";
-      Gruppen.forEach((g, idx) => {
-        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
-      });
-      document.getElementById('GruppeHidden').value = Gruppen.join('/');
-      // Zeige das Freitextfeld nur, wenn "sonstige" gewählt wurde
-      if (isSonstigeSelected()) {
-        document.getElementById('gruppe-sonstige-row').style.display = 'flex';
-      } else {
-        document.getElementById('gruppe-sonstige-row').style.display = 'none';
-        document.getElementById('gruppe_sonstige').value = '';
-      }
-    }
+    // Initialer Aufruf, damit der Text angezeigt wird
+    updateGruppeList();
   </script>
 
   <div class="form-row">
@@ -202,6 +175,12 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <input type="text" name="leiter" id="leiter" required>
     <span class="required-star">*</span>
   </div>
+<!-- 
+  <div class="form-row">
+    <label for="vermerk">Vermerk:</label>
+    <input type="text" name="vermerk" id="vermerk">
+  </div>
+-->
   <div class="form-row">
     <label for="bemerkung">Bemerkung:</label>
     <textarea name="bemerkung" id="bemerkung"></textarea>
