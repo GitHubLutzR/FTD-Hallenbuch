@@ -23,9 +23,12 @@ if (isset($_SESSION['user'])) {
     echo "<div style='text-align:right;'>👤 Angemeldet als <strong>" . htmlspecialchars($_SESSION['user']) . "</strong> ";
     echo "<a href='logout.php'>Logout</a><BR>";
     echo "<div style='text-align:right;'><a href='admin/admin_menu.php'>Admin-Menü</a></div><BR><BR>";
-    echo "<form method='post' style='display:inline;'>
-            <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
-          </form></div>";
+    if (isset($_SESSION['entry_count']) && $_SESSION['entry_count'] >= 3) {
+        echo "<form method='post' style='display:inline;'>
+                <button type='submit' name='reset_session' style='font-size:0.8em;'>🔄 Eintragszähler zurücksetzen</button>
+              </form>";
+    }
+    echo "</div>";
 } else {
     echo "<div style='text-align:right;'><a href='login.php'>🔐 Admin-Login</a></div>";
 } 
