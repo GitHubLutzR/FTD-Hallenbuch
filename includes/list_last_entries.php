@@ -38,9 +38,9 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<tr>";
     foreach ($columnConfig as $key => $config) {
       $value = htmlspecialchars($row[$key] ?? '');
+      $value = htmlspecialchars($row[$key] ?? '');
+      $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
       if ($key === 'bemerkung' && strlen($value) > 150) {
-        $value = htmlspecialchars($row[$key] ?? '');
-        $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
         $value = substr($value, 0, 147) . '...';
         echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
       } else {
