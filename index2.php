@@ -101,7 +101,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   </div>
   <div class="form-row">
     <label for="Gruppe">Gruppen:</label>
-    <select id="GruppeSelect" required>
+    <select id="GruppeSelect" >
       <option value="">Bitte wählen</option>
       <?php
       // Nochmals alle Gruppen für das Extra-Feld
@@ -119,8 +119,9 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 2 Gruppen</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
-  <!-- Hidden field for submit -->
-  <input type="hidden" name="gruppe" id="GruppeHidden" required>
+  <!-- Hidden field for submit 
+  <input type="hidden" name="gruppe" id="GruppeHidden" required> -->
+  <input type="text" name="gruppe" id="GruppeHidden" required>
 
   <script>
     // Maximal zwei Gruppen
