@@ -30,7 +30,7 @@ if (isset($_SESSION['user'])) {
     echo "<div style='text-align:right;'><a href='login.php'>🔐 Admin-Login</a></div>";
 } 
 if (isset($_POST['reset_session'])) {
-    unset($_SESSION['eintrags_count']);
+    unset($_SESSION['entry_count']);
     unset($_SESSION['eintrags_reset']); // falls du eine Zeitsteuerung nutzt
     echo "<div style='text-align:right;'><p>✅ Eintragszähler wurde zurückgesetzt.</p></div>";
 }
