@@ -76,7 +76,11 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   font-size: 0.9em;
   padding: 0 4px;
 }
-</style>
+.smal-txt {
+  font-size: 1em;
+  margin-left: 2px;
+  vertical-align: super;
+}</style>
 
 <form action="submit.php" method="post" id="hallenbuch-form">
   <div class="form-row">
@@ -111,7 +115,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <button type="button" id="clearGruppe">🗑️ Leeren</button>
     <?php //<span class="required-star" id="GruppeStar" style="display:none;">*</span>?>
     <span class="required-star">*</span>
-    <span> max. 2 Gruppen</span>
+    <span class="smal-txt"><&nbsp;><&nbsp;><&nbsp;> max. 2 Gruppen</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
   <!-- Hidden field for submit -->
