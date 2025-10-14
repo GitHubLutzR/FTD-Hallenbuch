@@ -12,6 +12,7 @@ require_once '/srv/hesk_settings.inc.php';
 // Hallenbuch-spezifischer Tabellenprefix
 $hesk_settings['db_hb_pfix'] = 'hb_';
 $hesk_settings['debug'] = false; // oder false zum Abschalten
+date_default_timezone_set('Europe/Berlin');
 // Datenbankverbindung bereitstellen
 if (!function_exists('get_db_connection')) {
     function get_db_connection(): mysqli {
