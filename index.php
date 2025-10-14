@@ -121,55 +121,50 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
     <span class="required-star">*</span>
   </div>
   <ul class="multi-group-list" id="GruppeList"></ul>
-  <div id="GruppePreview" style="margin-left:100px; color:#555; font-size:0.95em;"></div>
+  <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen.</div>
   <input type="hidden" name="gruppe" id="GruppeHidden">
 
-      <script>
-    // Maximal zwei Gruppen
-    let Gruppen = [];
-    function updateGruppeList() {
-      const list = document.getElementById('GruppeList');
-      list.innerHTML = "";
-      Gruppen.forEach((g, idx) => {
-        list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
-      });
-      // Zusammenfassen mit /
-      document.getElementById('GruppeHidden').value = Gruppen.join('/');
-      document.getElementById('GruppePreview').innerText = "Aktueller Wert: " + Gruppen.join('/');
-      // Optional: Sternchen anzeigen, falls vorhanden
-      if (document.getElementById('GruppeStar')) {
-        document.getElementById('GruppeStar').style.display = Gruppen.length ? 'inline' : 'none';
-      }
-    }
+<script>
+let Gruppen = [];
+function updateGruppeList() {
+  const list = document.getElementById('GruppeList');
+  list.innerHTML = "";
+  Gruppen.forEach((g, idx) => {
+    list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
+  });
+  document.getElementById('GruppeHidden').value = Gruppen.join('/');
+  // Hinweistext ein-/ausblenden
+  document.getElementById('GruppeHint').style.display = Gruppen.length ? 'none' : 'block';
+}
 
-    document.getElementById('addGruppe').addEventListener('click', function() {
-      const select = document.getElementById('GruppeSelect');
-      const value = select.value;
-      if (!value) return;
-      if (Gruppen.length >= 2) {
-        alert("Es können maximal zwei Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
-        return;
-      }
-      if (Gruppen.includes(value)) {
-        alert("Diese Gruppe wurde bereits hinzugefügt.");
-        return;
-      }
-      Gruppen.push(value);
-      updateGruppeList();
-    });
+document.getElementById('addGruppe').addEventListener('click', function() {
+  const select = document.getElementById('GruppeSelect');
+  const value = select.value;
+  if (!value) return;
+  if (Gruppen.length >= 2) {
+    alert("Es können maximal zwei Gruppen ausgewählt werden. Bitte zuerst leeren oder entfernen.");
+    return;
+  }
+  if (Gruppen.includes(value)) {
+    alert("Diese Gruppe wurde bereits hinzugefügt.");
+    return;
+  }
+  Gruppen.push(value);
+  updateGruppeList();
+});
 
-    document.getElementById('clearGruppe').addEventListener('click', function() {
-      Gruppen = [];
-      updateGruppeList();
-    });
+document.getElementById('clearGruppe').addEventListener('click', function() {
+  Gruppen = [];
+  updateGruppeList();
+});
 
-    window.removeGruppe = function(idx) {
-      Gruppen.splice(idx, 1);
-      updateGruppeList();
-    };
-    // Initialer Aufruf, damit der Text angezeigt wird
-    updateGruppeList();
-  </script>
+window.removeGruppe = function(idx) {
+  Gruppen.splice(idx, 1);
+  updateGruppeList();
+};
+
+updateGruppeList();
+</script>
 
   <div class="form-row">
     <label for="leiter">Leiter: </label>
