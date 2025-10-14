@@ -77,10 +77,11 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   padding: 0 4px;
 }
 .smal-txt {
-  font-size: 1em;
+  font-size: 0.5em;
   margin-left: 2px;
   vertical-align: super;
-}</style>
+}
+</style>
 
 <form action="submit.php" method="post" id="hallenbuch-form">
   <div class="form-row">
