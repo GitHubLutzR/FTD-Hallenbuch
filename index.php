@@ -52,23 +52,29 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   width: 300px;
   height: 60px;
 }
+.required-star {
+  color: red;
+  font-size: 1em;
+  margin-left: 2px;
+  vertical-align: super;
+}
 </style>
 
 <form action="submit.php" method="post">
   <div class="form-row">
-    <label for="datum">Datum:</label>
+    <label for="datum">Datum:<span class="required-star">*</span></label>
     <input type="date" name="datum" id="datum" value="<?= date('Y-m-d') ?>" required>
   </div>
   <div class="form-row">
-    <label for="von">Von:</label>
+    <label for="von">Von:<span class="required-star">*</span></label>
     <input type="time" name="von" id="von" required>
   </div>
   <div class="form-row">
-    <label for="bis">Bis:</label>
+    <label for="bis">Bis:<span class="required-star">*</span></label>
     <input type="time" name="bis" id="bis" required>
   </div>
   <div class="form-row">
-    <label for="gruppe">Gruppe:</label>
+    <label for="gruppe">Gruppe:<span class="required-star">*</span></label>
     <select name="gruppe" id="gruppe" required>
       <option value="">Bitte wählen</option>
       <?php
@@ -82,7 +88,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   </div>
 
   <div class="form-row" id="gruppe-sonstige-row" style="display:none;">
-    <label for="gruppe_sonstige">Bitte Gruppe angeben:</label>
+    <label for="gruppe_sonstige">Bitte Gruppe angeben:<span class="required-star">*</span></label>
     <input type="text" name="gruppe_sonstige" id="gruppe_sonstige" maxlength="100">
   </div>
   <script>
@@ -92,7 +98,7 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
   });
   </script>
   <div class="form-row">
-    <label for="leiter">Leiter:</label>
+    <label for="leiter">Leiter:<span class="required-star">*</span></label>
     <input type="text" name="leiter" id="leiter" required>
   </div>
 <!-- 

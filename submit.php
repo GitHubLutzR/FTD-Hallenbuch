@@ -53,11 +53,17 @@ if ($_SESSION['entry_count'] >= 5) {
 $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
 $bis       = $_POST['bis']       ?? '';
-$gruppe    = $_POST['gruppe']    ?? '';
-$leiter    = $_POST['leiter']    ?? '';
-$vermerk   = $_POST['vermerk']   ?? '';
-$bemerkung = $_POST['bemerkung'] ?? '';
-$gruppe_sonstige = $_POST['gruppe_sonstige'] ?? '';
+$gruppe    = htmlentities($_POST['gruppe']    ?? '', ENT_QUOTES, 'UTF-8');
+$leiter    = htmlentities($_POST['leiter']    ?? '', ENT_QUOTES, 'UTF-8');
+$vermerk   = htmlentities($_POST['vermerk']   ?? '', ENT_QUOTES, 'UTF-8');
+$bemerkung = htmlentities($_POST['bemerkung'] ?? '', ENT_QUOTES, 'UTF-8');
+$gruppe_sonstige = htmlentities($_POST['gruppe_sonstige'] ?? '', ENT_QUOTES, 'UTF-8');
+
+//$gruppe    = $_POST['gruppe']    ?? '';
+//$leiter    = $_POST['leiter']    ?? '';
+//$vermerk   = $_POST['vermerk']   ?? '';
+//$bemerkung = $_POST['bemerkung'] ?? '';
+//$gruppe_sonstige = $_POST['gruppe_sonstige'] ?? '';
 
 // Pflichtfeldprüfung
 if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
