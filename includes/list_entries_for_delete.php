@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/header.php');
 ession_start();
 
 // Zugriffsschutz
@@ -187,4 +188,5 @@ if ($result && mysqli_num_rows($result) > 0) {
 }
 
 mysqli_close($conn);
+require_once(__DIR__ . '/footer.php');
 ?>
