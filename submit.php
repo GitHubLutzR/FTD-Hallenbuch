@@ -83,6 +83,10 @@ $maxZukunft = $jetzt + 3600;
 
 // Validierung
 if ($eintragZeit > $maxZukunft) {
+        if ($hesk_settings['debug']) {
+        echo "EintragZeit: $eintragZeit, MaxZukunft: $maxZukunft";
+        sleep(15); 
+        }
         header("Location: index.php?rcsubmit=2");
         exit;
 //    die("Fehler: Der Eintrag darf nicht in der Zukunft liegen.");
