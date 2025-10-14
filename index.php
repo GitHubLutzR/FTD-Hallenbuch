@@ -126,6 +126,11 @@ $table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 
 <script>
 let Gruppen = [];
+
+function isSonstigeSelected() {
+  return Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige';
+}
+
 function updateGruppeList() {
   const list = document.getElementById('GruppeList');
   list.innerHTML = "";
@@ -133,8 +138,18 @@ function updateGruppeList() {
     list.innerHTML += `<li>${g} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button></li>`;
   });
   document.getElementById('GruppeHidden').value = Gruppen.join('/');
-  // Hinweistext ein-/ausblenden
   document.getElementById('GruppeHint').style.display = Gruppen.length ? 'none' : 'block';
+  // Freitextfeld für "sonstige"
+  if (isSonstigeSelected()) {
+    document.getElementById('GruppeSelect').disabled = true;
+    document.getElementById('addGruppe').disabled = true;
+    document.getElementById('gruppe-sonstige-row').style.display = 'flex';
+  } else {
+    document.getElementById('GruppeSelect').disabled = false;
+    document.getElementById('addGruppe').disabled = false;
+    document.getElementById('gruppe-sonstige-row').style.display = 'none';
+    document.getElementById('gruppe_sonstige').value = '';
+  }
 }
 
 document.getElementById('addGruppe').addEventListener('click', function() {
@@ -147,6 +162,17 @@ document.getElementById('addGruppe').addEventListener('click', function() {
   }
   if (Gruppen.includes(value)) {
     alert("Diese Gruppe wurde bereits hinzugefügt.");
+    return;
+  }
+  // Wenn "sonstige" gewählt wird, nur diese zulassen
+  if (value.toLowerCase() === 'sonstige') {
+    Gruppen = ['sonstige'];
+    updateGruppeList();
+    return;
+  }
+  // Wenn bereits "sonstige" gewählt wurde, keine weitere zulassen
+  if (Gruppen.length === 1 && Gruppen[0].toLowerCase() === 'sonstige') {
+    alert("Wenn 'sonstige' gewählt wurde, kann keine weitere Gruppe hinzugefügt werden.");
     return;
   }
   Gruppen.push(value);
