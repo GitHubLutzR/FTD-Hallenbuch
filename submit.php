@@ -84,9 +84,13 @@ $maxZukunft = $jetzt + 3600;
 // Validierung
 if ($eintragZeit > $maxZukunft) {
         if ($hesk_settings['debug']) {
-            $Debuginfo = ";EintragZeit=" . date('Y-m-d H:i:s', $eintragZeit) . ";MaxZukunft=" . date('Y-m-d H:i:s', $maxZukunft) . ";ServerTime=" . date('Y-m-d H:i:s', $jetzt);
-            header("Location: index.php?rcsubmit=2$Debuginfo");
-            exit;
+        $params = http_build_query([
+            'rcsubmit'    => 2,
+            'EintragZeit' => date('Y-m-d H:i:s', $eintragZeit),
+            'MaxZukunft'  => date('Y-m-d H:i:s', $maxZukunft)
+        ]);
+        header("Location: index.php?$params");
+        exit;
             //echo date_default_timezone_get();
         }
         header("Location: index.php?rcsubmit=2");
