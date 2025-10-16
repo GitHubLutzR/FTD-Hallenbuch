@@ -6,6 +6,20 @@ session_start();
 // Zugriffsschutz
 if (!isset($_SESSION['user'])) {
     echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+if ($hesk_settings['debug']) {
+    if (isset($_GET['debug'])) {
+        echo "<pre>Debug (base64):\n";
+        $decoded = base64_decode($_GET['debug']);
+        print_r(json_decode($decoded, true));
+        echo "</pre>";
+    }
+    echo "<pre>\$_SESSION:\n";
+    print_r($_SESSION);
+    echo "</pre>";
+    echo "<pre>Übermittelte Formulardaten:\n";
+    print_r($_POST);
+    echo "</pre>";
+}
     exit;
 }
 $conn = get_db_connection();
