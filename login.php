@@ -3,10 +3,10 @@ session_start();
 require_once 'config.php';
 
 // Zugriffsschutz
-if (isset($_SESSION['user'])) {
-    echo "<p>⛔ bereits eingelogged.<a href='index.php'>zurück</a>.</p>";
-    exit;
-}
+//if (isset($_SESSION['user'])) {
+    //echo "<p>⛔ bereits eingelogged.<a href='index.php'>zurück</a>.</p>";
+    //exit;
+//}
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
 //    echo "Aufruf von $referer\n";
 $login_error = false;
