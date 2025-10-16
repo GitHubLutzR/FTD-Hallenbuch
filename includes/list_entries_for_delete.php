@@ -187,4 +187,6 @@ if ($result && mysqli_num_rows($result) > 0) {
 }
 
 mysqli_close($conn);
+require_once(__DIR__ . '/footer.php');
+//    require_once 'includes/footer.php'; 
 ?>
