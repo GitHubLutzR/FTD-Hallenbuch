@@ -7,7 +7,8 @@ if (isset($_SESSION['user'])) {
     echo "<p>⛔ bereits eingelogged.<a href='index.php'>zurück</a>.</p>";
     exit;
 }
-
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+//    echo "Aufruf von $referer\n";
 $login_error = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,7 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($password, $hashed_password)) {
             $_SESSION['user'] = $username;
             $_SESSION['name'] = $name;
-            header('Location: index.php');
+            header('Location: ' . $redirect);
+            //header('Location: index.php');
             #header("Location: " . $_SERVER['HTTP_REFERER']);
             exit;
         }
