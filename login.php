@@ -4,11 +4,11 @@ require_once 'config.php';
 $base_url = '/hallenbuch/'; 
 // Zugriffsschutz
 if (isset($_SESSION['user'])) {
-     header('Location: $base_url}admin/admin_menu.php');
-    //echo "<p>⛔ bereits eingelogged.<a href='index.php'>zurück</a>.</p>";
-    //exit;
+    // korrekt: Variable direkt verwenden oder in doppelte Anführungszeichen mit {}.
+    header('Location: ' . $base_url . 'admin/admin_menu.php');
+    exit;
 }
-    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
 //    echo "Aufruf von $referer\n";
 $login_error = false;
 
