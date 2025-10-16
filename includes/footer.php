@@ -18,6 +18,7 @@ if ($hesk_settings['debug']) {
     echo "</pre>";
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     echo "Aufruf von $referer\n";
+    echo '<p>Pfad: ' . htmlspecialchars(__DIR__, ENT_QUOTES, 'UTF-8') . '</p>';
 }
 ?>
 </body>
