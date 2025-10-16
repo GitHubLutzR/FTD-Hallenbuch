@@ -17,7 +17,7 @@ echo "<ul>
     <li><a href='admin_user_password.php'>🔑 Passwort setzen/zurücksetzen (manuelle ID nötig)</a></li>
     <li><a href='admin_user_delete.php'>🗑️ Benutzer löschen (manuelle ID nötig)</a></li>
     <li><a href='../logout.php'>🚪 Logout</a></li>
-    <li><a href='includes/list_entries_for_delete.php'>🗑️Einträge löschen (manuelle ID nötig)</a></li>
+    <li><a href='../includes/list_entries_for_delete.php'>🗑️Einträge löschen (manuelle ID nötig)</a></li>
 </ul>";
 ?>
 
