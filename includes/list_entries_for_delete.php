@@ -1,7 +1,7 @@
 <?php
 require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/header.php');
-ession_start();
+session_start();
 
 // Zugriffsschutz
 if (!isset($_SESSION['user'])) {
