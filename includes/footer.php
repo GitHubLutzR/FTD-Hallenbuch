@@ -16,6 +16,7 @@ if ($hesk_settings['debug']) {
     echo "<pre>Übermittelte Formulardaten:\n";
     print_r($_POST);
     echo "</pre>";
+    phpinfo();
 }
 ?>
 </body>
