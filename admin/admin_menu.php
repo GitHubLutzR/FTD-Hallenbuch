@@ -4,7 +4,7 @@ session_start();
 
 // Zugriffsschutz
 if (!isset($_SESSION['user'])) {
-    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='../login.php'>einloggen</a>.</p>";
     exit;
 }
 
