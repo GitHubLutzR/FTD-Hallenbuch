@@ -2,6 +2,12 @@
 session_start();
 require_once 'config.php';
 
+// Zugriffsschutz
+if (isset($_SESSION['user'])) {
+    echo "<p>⛔ bereits eingelogged.<a href='index.php'>zurück</a>.</p>";
+    exit;
+}
+
 $login_error = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
