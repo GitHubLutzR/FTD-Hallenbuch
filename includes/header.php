@@ -19,6 +19,17 @@
 </head>
 <body>
 <?php
+// Debug: PHP-Fehler anzeigen, nur wenn Debug-Flag gesetzt
+if (!empty($hesk_settings['debug'])) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    ini_set('log_errors', '1');
+    ini_set('error_log', sys_get_temp_dir() . '/php_errors.log'); // prüfbare Log-Datei
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    error_reporting(0);
+}
 // Basis-URL definieren
 $base_url = '/hallenbuch/'; 
 if (isset($_SESSION['user'])) {
