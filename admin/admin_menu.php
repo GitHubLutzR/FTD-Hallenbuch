@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/header.php');
 session_start();
 
 // Zugriffsschutz
@@ -20,5 +21,6 @@ echo "<ul>
     <li><a href='../logout.php'>🚪 Logout</a></li>
     <li><a href='../includes/list_entries_for_delete.php'>🗑️Einträge löschen (manuelle ID nötig)</a></li>
 </ul>";
+require_once(__DIR__ . '/footer.php');
 ?>
 
