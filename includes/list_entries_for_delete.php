@@ -1,14 +1,13 @@
 <?php
 require_once(__DIR__ . '/../config.php');
-//require_once(__DIR__ . '/header.php');
+require_once(__DIR__ . '/header.php');
 ession_start();
 
 // Zugriffsschutz
-//if (!isset($_SESSION['user'])) {
-//    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
-//    exit;
-//}
-
+if (!isset($_SESSION['user'])) {
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
+    exit;
+}
 $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
@@ -188,5 +187,4 @@ if ($result && mysqli_num_rows($result) > 0) {
 }
 
 mysqli_close($conn);
-require_once(__DIR__ . '/footer.php');
 ?>
