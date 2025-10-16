@@ -9,4 +9,4 @@ if (empty($_SESSION['user'])) {
     require_once(__DIR__ . '/footer.php');
     exit;
 }
-
+?>
