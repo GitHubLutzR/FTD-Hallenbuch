@@ -1,30 +1,14 @@
 <?php
-require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/header.php');
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    // startet die Session nur, wenn sie noch nicht aktiv ist
-    session_start();
-}
+require_once(__DIR__ . '/../config.php');
+session_start();
 
 // Zugriffsschutz
 if (!isset($_SESSION['user'])) {
-    echo "<p>⛔ Kein Zugriff. Bitte <a href='login.php'>einloggen</a>.</p>";
-if ($hesk_settings['debug']) {
-    if (isset($_GET['debug'])) {
-        echo "<pre>Debug (base64):\n";
-        $decoded = base64_decode($_GET['debug']);
-        print_r(json_decode($decoded, true));
-        echo "</pre>";
-    }
-    echo "<pre>\$_SESSION:\n";
-    print_r($_SESSION);
-    echo "</pre>";
-    echo "<pre>Übermittelte Formulardaten:\n";
-    print_r($_POST);
-    echo "</pre>";
-}
+    echo "<p>⛔ Kein Zugriff. Bitte <a href='../login.php'>einloggen</a>.</p>";
     exit;
 }
+
 $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
