@@ -16,7 +16,8 @@ if ($hesk_settings['debug']) {
     echo "<pre>Übermittelte Formulardaten:\n";
     print_r($_POST);
     echo "</pre>";
-    phpinfo();
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    echo "Aufruf von $referer\n";
 }
 ?>
 </body>
