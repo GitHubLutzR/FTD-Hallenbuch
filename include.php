@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -17,7 +17,7 @@
     }
   </style>
 </head>
-<body>
+<body -->
 <?php
 session_start();
 
