@@ -11,6 +11,7 @@ if (!isset($_SESSION['user'])) {
 
 echo "<h1>Admin-Menü</h1>";
 echo "<ul>
+    <li><a href='../index.php'> Startseite</a></li>
     <li><a href='admin_users.php'>👥 Benutzerübersicht</a></li>
     <li><a href='admin_user_new.php'>➕ Benutzer anlegen</a></li>
     <li><a href='admin_user_edit.php'>✏️ Benutzer bearbeiten (manuelle ID nötig)</a></li>
