@@ -20,10 +20,25 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
+$lifetime = 3600; // Sekunden, z.B. 1 Stunde
 
-// Session nur starten, wenn noch keine aktiv ist
+// Stelle sicher: session_set_cookie_params(...) und session_start() bereits aufgerufen
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
+}
+
+// Sliding timeout: prüfen und aktualisieren
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > $lifetime)) {
+    // Inaktiv zu lange -> ausloggen
+    $_SESSION = [];
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    session_destroy();
+} else {
+    // aktiv -> Timestamp und Cookie-Expiry erneuern (macht die Lifetime "sliding")
+    $_SESSION['LAST_ACTIVITY'] = time();
+    $params = session_get_cookie_params();
+    setcookie(session_name(), session_id(), time() + $lifetime, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
 }
 
 if (!defined('IN_SCRIPT')) {

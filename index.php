@@ -2,7 +2,6 @@
 //session_start();
 
 require_once(__DIR__ . '/config.php');
-#require_once(__DIR__ . '/header.php');
 require_once(__DIR__ . '/include_public.php');
 // Debug aktivieren (nur wenn Debug-Flag gesetzt)
 if (!empty($hesk_settings['debug'])) {
