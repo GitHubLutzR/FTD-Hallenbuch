@@ -1,32 +1,60 @@
 <?php
 require_once(__DIR__ . '/../config.php');
-#require_once(__DIR__ . '/../header.php');
 require_once(__DIR__ . '/../include.php');
+#require_once(__DIR__ . '/../include_public.php');
+// Debug aktivieren (nur wenn Debug-Flag gesetzt)
+if (!empty($hesk_settings['debug'])) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    ini_set('log_errors', '1');
+    ini_set('error_log', sys_get_temp_dir() . '/php_errors.log'); // z.B. /tmp/php_errors.log
+    error_reporting(E_ALL);
 
+    // Auf Shutdown prüfen (z.B. für fatale Fehler)
+    register_shutdown_function(function() {
+        $err = error_get_last();
+        if ($err) {
+            error_log('SHUTDOWN ERROR: ' . print_r($err, true));
+        }
+    });
+}
 $conn = get_db_connection();
 global $hesk_settings;
 $table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
 
-// Filterparameter
+// Filterparameter (robust: Priorität nach tatsächlich gesendeten Parametern)
 $selectedDate   = $_GET['filter_date'] ?? '';
 $selectedWeek   = $_GET['filter_week'] ?? '';
 $selectedMonth  = $_GET['filter_month'] ?? '';
 $activeFilter   = '';
 
-if (!empty($selectedDate)) {
+// Wenn filter_date explizit im Query-String ist und nicht leer, priorisiere Datum.
+// Ansonsten prüfe explizit auf filter_week, dann filter_month.
+// Dadurch kann man zuverlässig von Woche/Monat zurück auf Datum wechseln.
+if (array_key_exists('filter_date', $_GET) && $_GET['filter_date'] !== '') {
     $activeFilter = 'date';
-}
-if (!empty($selectedWeek)) {
+    $selectedWeek = '';
+    $selectedMonth = '';
+} elseif (array_key_exists('filter_week', $_GET) && $_GET['filter_week'] !== '') {
     $activeFilter = 'week';
-}
-if (!empty($selectedMonth)) {
+    $selectedDate = '';
+    $selectedMonth = '';
+} elseif (array_key_exists('filter_month', $_GET) && $_GET['filter_month'] !== '') {
     $activeFilter = 'month';
+    $selectedDate = '';
+    $selectedWeek = '';
+} else {
+    // Keine expliziten Filter-Parameter -> keine Filter aktiv
+    $selectedDate = '';
+    $selectedWeek = '';
+    $selectedMonth = '';
+    $activeFilter = '';
 }
 
-// Limit automatisch auf 'ALLE' bei Filter
+// Limit-Auswahl: wenn ein Filter aktiv ist, Default auf 'ALLE' (oder über GET)
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
 $selectedLimit = $_GET['limit'] ?? ($activeFilter ? 'ALLE' : 10);
-$selectedLimit = in_array($selectedLimit, $limitOptions) ? $selectedLimit : 10;
+$selectedLimit = in_array($selectedLimit, $limitOptions, true) ? $selectedLimit : 10;
 
 // Filterlogik
 $dateCondition = '';
@@ -64,33 +92,33 @@ if (!empty($selectedDate) && isset($dateObj)) {
     $today     = date('Y-m-d');
 }
 
-// Auswahlformular
-echo "<form method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
+// Auswahlformular (ohne inline onchange - JS übernimmt das Submit nach dem Leeren)
+echo "<form id='filterForm' method='GET' style='margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;'>";
 
 // Limit-Auswahl
 echo "<label for='limit'>Anzahl Einträge:</label> ";
-echo "<select name='limit' onchange='this.form.submit()'>";
+echo "<select name='limit' id='limitSelect'>";
 foreach ($limitOptions as $option) {
     $selected = ($selectedLimit == $option || ($activeFilter && !isset($_GET['limit']) && $option === 'ALLE')) ? "selected" : "";
     echo "<option value='$option' $selected>$option</option>";
 }
 echo "</select>";
 
-// Datumsfilter
+// Datumsfilter (kein inline onchange)
 echo "<label for='filter_date'>Datum:</label>";
-echo "<input type='date' name='filter_date' value='" . htmlspecialchars($selectedDate) . "' onchange='this.form.submit()'>";
+echo "<input type='date' name='filter_date' id='filter_date' value='" . htmlspecialchars($selectedDate) . "'>";
 
 // Zurück/Vor Buttons
 if (!empty($selectedDate)) {
-    echo "<a href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
+    echo "<a id='prevDate' href='?filter_date=$yesterday&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>◀</a>";
     if ($formattedDate < $today) {
-        echo "<a href='?filter_date=$tomorrow&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
+        echo "<a id='nextDate' href='?filter_date=$tomorrow&limit=ALLE' style='padding: 4px 8px; border: 1px solid #ccc;'>▶</a>";
     }
 }
 
-// Wochenfilter
+// Wochenfilter (kein inline onchange)
 echo "<label for='filter_week'>Wochenfilter:</label>";
-echo "<select name='filter_week' onchange='this.form.submit()'>";
+echo "<select name='filter_week' id='filter_week'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $weekNum = date('W', strtotime("-$i week"));
@@ -99,9 +127,9 @@ for ($i = 0; $i < 8; $i++) {
 }
 echo "</select>";
 
-// Monatsfilter
+// Monatsfilter (kein inline onchange)
 echo "<label for='filter_month'>Monatsfilter:</label>";
-echo "<select name='filter_month' onchange='this.form.submit()'>";
+echo "<select name='filter_month' id='filter_month'>";
 echo "<option value=''>–</option>";
 for ($i = 0; $i < 8; $i++) {
     $monthNum = date('n', strtotime("-$i month"));
@@ -113,10 +141,63 @@ echo "</select>";
 
 // Filter aufheben
 if ($activeFilter) {
-    echo "<a href='?limit=10' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
+    echo "<a href='" . htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') . "' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
 echo "</form>";
+
+// JS: beim Wechsel eines Filters die anderen Filterfelder LEEREN (nicht disablen) und dann SUBMIT
+echo <<<'JS'
+<script>
+(function(){
+    var f = document.getElementById('filterForm');
+    if (!f) return;
+    var date = f.querySelector('input[name="filter_date"]');
+    var week = f.querySelector('select[name="filter_week"]');
+    var month = f.querySelector('select[name="filter_month"]');
+    var limit = f.querySelector('select[name="limit"]') || document.getElementById('limitSelect');
+
+    function clearDate(){ if (date) { date.value = ''; } }
+    function clearWeek(){ if (week) { week.value = ''; week.selectedIndex = 0; } }
+    function clearMonth(){ if (month) { month.value = ''; month.selectedIndex = 0; } }
+
+    // Beim Laden: falls ein Feld bereits gesetzt ist, die anderen leeren (nur optisch/cleanup)
+    (function initClear() {
+        if (week && week.value) {
+            clearDate(); clearMonth();
+        } else if (month && month.value) {
+            clearDate(); clearWeek();
+        } else if (date && date.value) {
+            clearWeek(); clearMonth();
+        }
+    })();
+
+    // Ändere-Handler: LEEREN -> ggf limit anpassen -> SUBMIT
+    function onWeekChange(){
+        clearDate();
+        clearMonth();
+        if(limit) limit.value = 'ALLE';
+        f.submit();
+    }
+    function onMonthChange(){
+        clearDate();
+        clearWeek();
+        if(limit) limit.value = 'ALLE';
+        f.submit();
+    }
+    function onDateChange(){
+        clearWeek();
+        clearMonth();
+        if(limit) limit.value = 'ALLE';
+        f.submit();
+    }
+
+    if (week) week.addEventListener('change', onWeekChange);
+    if (month) month.addEventListener('change', onMonthChange);
+    if (date) date.addEventListener('change', onDateChange);
+})();
+</script>
+JS;
 
 // Überschrift
 if ($activeFilter === 'date') {
@@ -183,5 +264,4 @@ if ($result && mysqli_num_rows($result) > 0) {
 
 mysqli_close($conn);
 require_once(__DIR__ . '/footer.php');
-//    require_once 'includes/footer.php'; 
 ?>
