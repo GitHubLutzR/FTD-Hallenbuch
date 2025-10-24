@@ -150,8 +150,9 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   <ul class="multi-group-list" id="GruppeList"></ul>
   <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
 
-  <!-- Hidden-Feld enthält die IDs (z.B. "3/5") -->
-  <input type="hidden" name="gruppe" id="GruppeHidden">
+  <!-- Hidden-Felder: gruppe (Namen, für submit.php) und gruppe_ids (IDs, für JS/AJAX intern) -->
+  <input type="hidden" name="gruppe" id="GruppeHidden">         <!-- z.B. "GrA/GrB" -->
+  <input type="hidden" name="gruppe_ids" id="GruppeHiddenIDs">  <!-- z.B. "3/5" -->
 
 <script>
 (function(){
@@ -171,8 +172,9 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
         li.innerHTML = `${g.name} <button type="button" onclick="removeGruppe(${idx})">Entfernen</button>`;
         list.appendChild(li);
       });
-      // Hidden mit IDs füllen (IDs durch / getrennt)
-      document.getElementById('GruppeHidden').value = Gruppen.map(g => g.id).join('/');
+      // Hidden mit IDs und Hidden mit Namen füllen (IDs: "3/5", Namen: "GrA/GrB")
+      document.getElementById('GruppeHiddenIDs').value = Gruppen.map(g => g.id).join('/');
+      document.getElementById('GruppeHidden').value = Gruppen.map(g => g.name).join('/');
       document.getElementById('GruppeHint').style.display = Gruppen.length ? 'none' : 'block';
 
       // Sonstige-Feld anzeigen/verstecken
@@ -237,7 +239,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   // initial Trainer-Refresh (falls keine Gruppen gesetzt, werden alle Trainer gezeigt)
   if (typeof refreshTrainerOptions === 'function') {
    refreshTrainerOptions(Gruppen.map(g => g.id));
- }
+  }
 })();
 </script>
 
@@ -254,7 +256,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   </div>
   <ul class="multi-group-list" id="TrainerList"></ul>
   <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer/-innen auswählen und auf ➕ Hinzufügen klicken.</div>
-  <input type="hidden" name="trainer" id="TrainerHidden">
+  <BR><BR> <input type="hidden" name="trainer" id="TrainerHidden">
   
   <?php
 // Serverseitig: Map group_id => [trainerNames] und Gesamtliste aller Trainer

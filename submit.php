@@ -38,7 +38,7 @@ if ($_SESSION['entry_count'] >= 3 && $_SESSION['entry_count'] < 5) {
         echo "<label>Captcha (Gib 'FTD' ein): <input name='captcha'></label>";
         echo "<button type='submit'>Bestätigen</button>";
         echo "</form>";
-        exit;
+        //exit;
     }
 }
 
@@ -54,7 +54,7 @@ $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
 $bis       = $_POST['bis']       ?? '';
 $gruppe    = htmlentities($_POST['gruppe']    ?? '', ENT_QUOTES, 'UTF-8');
-$trainer    = htmlentities($_POST['leiter']    ?? '', ENT_QUOTES, 'UTF-8');
+$trainer    = htmlentities($_POST['trainer'] ?? $_POST['leiter'] ?? '', ENT_QUOTES, 'UTF-8');
 $vermerk   = htmlentities($_POST['vermerk']   ?? '', ENT_QUOTES, 'UTF-8');
 $bemerkung = htmlentities($_POST['bemerkung'] ?? '', ENT_QUOTES, 'UTF-8');
 $gruppe_sonstige = htmlentities($_POST['gruppe_sonstige'] ?? '', ENT_QUOTES, 'UTF-8');
@@ -158,4 +158,47 @@ if (mysqli_stmt_execute($stmt)) {
     mysqli_close($conn);
     exit;
 }
+
+// statt: $gruppe = $_POST['gruppe'] ...
+// sichere Tabellennamen
+$safe_grtable = preg_replace('/[^A-Za-z0-9_]/', '', $hesk_settings['db_hb_pfix'] . 'gruppen');
+
+$group_input = trim($_POST['gruppe'] ?? '');
+$gruppe_names = [];
+
+// wenn "sonstige" frei eingegeben wurde, bevorzugen
+$sonstige = trim($_POST['gruppe_sonstige'] ?? '');
+if ($sonstige !== '') {
+    $gruppe_names[] = $sonstige;
+} elseif ($group_input !== '') {
+    // IDs parsen: "3/5" oder "3,5"
+    $parts = preg_split('#[\/,]#', $group_input);
+    $ids = [];
+    foreach ($parts as $p) {
+        $p = trim($p);
+        if ($p === '') continue;
+        $id = (int)$p;
+        if ($id > 0) $ids[] = $id;
+    }
+    $ids = array_values(array_unique($ids));
+    if (count($ids) > 0) {
+        // sichere IN‑Liste bauen
+        $in = implode(',', array_map('intval', $ids));
+        $q = "SELECT id, name FROM `{$safe_grtable}` WHERE id IN ({$in})";
+        $res = mysqli_query($conn, $q);
+        $map = [];
+        if ($res) {
+            while ($r = mysqli_fetch_assoc($res)) {
+                $map[(int)$r['id']] = $r['name'];
+            }
+        }
+        // in ursprünglicher Reihenfolge die Namen sammeln (nur vorhandene IDs)
+        foreach ($ids as $id) {
+            if (isset($map[$id])) $gruppe_names[] = $map[$id];
+        }
+    }
+}
+
+// Endergebnis: Namen zusammenfügen (z.B. "GrA/GrB") oder leer lassen
+$gruppe = implode('/', $gruppe_names);
 

@@ -237,20 +237,27 @@ if ($result && mysqli_num_rows($result) > 0) {
                 <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
               </td>";
         foreach ($columnConfig as $key => $config) {
+            // Werte holen, HTML-Entities zurückübersetzen (Umlaute wiederherstellen)
             $value = htmlspecialchars($row[$key] ?? '');
+            $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+
             if ($key === 'bemerkung' && strlen($value) > 150) {
                 $value = substr($value, 0, 147) . '...';
-            }
-            if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
-                $value = substr($value, 0, 5);
-            }
-            if ($key === 'datum' && !empty($value)) {
-                $dateObj = DateTime::createFromFormat('Y-m-d', $value);
-                if ($dateObj) {
-                    $value = $dateObj->format('d.m.Y');
+                echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
+            } else {
+                // Zeitfelder kürzen auf HH:MM
+                if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
+                    $value = substr($value, 0, 5);
                 }
+                // Datum umwandeln in TT.MM.JJJJ
+                if ($key === 'datum' && !empty($value)) {
+                    $dateObj = DateTime::createFromFormat('Y-m-d', $value);
+                    if ($dateObj) {
+                        $value = $dateObj->format('d.m.Y');
+                    }
+                }
+                echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
             }
-            echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
         }
         echo "</tr>";
     }
