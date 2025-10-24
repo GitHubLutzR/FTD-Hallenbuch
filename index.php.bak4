@@ -151,7 +151,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
 
   <!-- Hidden-Feld enthält die IDs (z.B. "3/5") -->
-  <input type="hidden" name="gruppe" id="GruppeHidden">
+  <input type="text" name="gruppe" id="GruppeHidden">
 
 <script>
 (function(){
@@ -243,17 +243,18 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
 
 
   <div class="form-row">
-    <label for="Trainer">Trainer/<br>-innen:</label>
+    <label for="Trainer">Trainer/innen:</label>
+
     <select id="TrainerSelect">
       <option value="">Bitte wählen</option>
     </select>
     <button type="button" id="addTrainer">➕ Hinzufügen</button>
     <button type="button" id="clearTrainer">🗑️ Leeren</button>
     <span class="required-star">*</span>
-    <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 4 Trainer/-innen</span>
+    <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 2 Trainer</span>
   </div>
   <ul class="multi-group-list" id="TrainerList"></ul>
-  <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer/-innen auswählen und auf ➕ Hinzufügen klicken.</div>
+  <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer auswählen und auf ➕ Hinzufügen klicken.</div>
   <input type="hidden" name="trainer" id="TrainerHidden">
   
   <?php
@@ -311,66 +312,6 @@ function refreshTrainerOptions(selectedGroupIds) {
 
 // Expose for group JS
 window.refreshTrainerOptions = refreshTrainerOptions;
-</script>
-
-<script>
-(function(){
-  // Trainer UI: Hinzufügen / Entfernen / Hidden-Feld pflegen
-  const sel = document.getElementById('TrainerSelect');
-  const addBtn = document.getElementById('addTrainer');
-  const clearBtn = document.getElementById('clearTrainer');
-  const listEl = document.getElementById('TrainerList');
-  const hint  = document.getElementById('TrainerHint');
-  const hidden = document.getElementById('TrainerHidden');
-  const MAX_TR = 4;
-  let Trainers = []; // array of names
-
-  function updateTrainerUI(){
-    listEl.innerHTML = '';
-    Trainers.forEach((t, idx) => {
-      const li = document.createElement('li');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = 'Entfernen';
-      btn.addEventListener('click', () => { removeTrainer(idx); });
-      li.textContent = t + ' ';
-      li.appendChild(btn);
-      listEl.appendChild(li);
-    });
-    hidden.value = Trainers.join('/');
-    if (hint) hint.style.display = Trainers.length ? 'none' : 'block';
-  }
-
-  function addTrainer(){
-    if (!sel) return;
-    const v = sel.value;
-    if (!v) return alert('Bitte einen Trainer auswählen.');
-    if (Trainers.includes(v)) return alert('Trainer bereits hinzugefügt.');
-    if (Trainers.length >= MAX_TR) return alert('Maximal ' + MAX_TR + ' Trainer möglich.');
-    // optional: handle 'sonstige' specially if needed
-    Trainers.push(v);
-    updateTrainerUI();
-  }
-
-  function clearTrainers(){
-    Trainers = [];
-    updateTrainerUI();
-  }
-
-  window.removeTrainer = function(idx){
-    Trainers.splice(idx, 1);
-    updateTrainerUI();
-  };
-
-  if (addBtn) addBtn.addEventListener('click', addTrainer);
-  if (clearBtn) clearBtn.addEventListener('click', clearTrainers);
-
-  // Falls bereits ein Wert im hidden (z.B. bei Reload), initial befüllen
-  if (hidden && hidden.value) {
-    Trainers = hidden.value.split('/').map(s=>s.trim()).filter(Boolean);
-    updateTrainerUI();
-  }
-})();
 </script>
 
   <!-- 
