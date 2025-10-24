@@ -4,7 +4,22 @@ session_start();
 require_once(__DIR__ . '/config.php');
 #require_once(__DIR__ . '/header.php');
 require_once(__DIR__ . '/include_public.php');
+// Debug aktivieren (nur wenn Debug-Flag gesetzt)
+if (!empty($hesk_settings['debug'])) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    ini_set('log_errors', '1');
+    ini_set('error_log', sys_get_temp_dir() . '/php_errors.log'); // z.B. /tmp/php_errors.log
+    error_reporting(E_ALL);
 
+    // Auf Shutdown prüfen (z.B. für fatale Fehler)
+    register_shutdown_function(function() {
+        $err = error_get_last();
+        if ($err) {
+            error_log('SHUTDOWN ERROR: ' . print_r($err, true));
+        }
+    });
+}
 if (isset($_GET['rcsubmit'])) {
     if ($_GET['rcsubmit'] == 1) {
         echo "<p>✅ Eintrag erfolgreich gespeichert!</p>";

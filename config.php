@@ -7,8 +7,23 @@ if (!defined('IN_SCRIPT')) {
     define('IN_SCRIPT', 1); // HESK erwartet diese Konstante
 }
 // HESK-Konfiguration einbinden
-require_once '/srv/hesk_settings.inc.php';
-
+//require_once '/srv/hesk_settings.inc.php';
+$hesk_cfg_path = '/srv/hesk_settings.inc.php';
+if (is_readable($hesk_cfg_path)) {
+    require_once $hesk_cfg_path;
+    #echo "<p>✅ Konfig-Datei geladen: $hesk_cfg_path</p>";
+} else {
+    error_log("FEHLER: Konfig-Datei nicht gefunden: $hesk_cfg_path");
+    // optional: versuchen, über include_path zu finden
+    if ($alt = stream_resolve_include_path('hesk_settings.inc.php')) {
+        require_once $alt;
+    } else {
+        // Abbruch mit klarer Fehlermeldung (oder setze Fallback-Werte)
+        trigger_error("Konfigurationsdatei $hesk_cfg_path fehlt. Abbruch.", E_USER_ERROR);
+        // alternativ statt Abbruch:
+        // $hesk_settings = []; $hesk_settings['debug'] = true;
+    }
+}
 // Hallenbuch-spezifischer Tabellenprefix
 $hesk_settings['db_hb_pfix'] = 'hb_';
 $hesk_settings['debug'] = false; // oder false zum Abschalten
