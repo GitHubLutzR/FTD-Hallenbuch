@@ -24,7 +24,7 @@ if [ "$1" = "l" ]; then
   TARGET_USER="root:daemon"
 elif [ "$1" = "o" ]; then
   TARGET_ROOT="$(dirname "$SCRIPT_DIR"|sed 's@git/FTD-Hallenbuch@HESK/hallenbuch@g')"
-  if [ "$SRC_REAL" = "$TGT_REAL" ]; then
+  if [ "$SOURCE_ROOT" = "$TARGET_ROOT" ]; then
 	  echo "Fehler beim Aufruf (SOURCE_ROOT und TARGET_ROOT), auf dem richtigen Server?" >&2
     #exit 1
   fi  
