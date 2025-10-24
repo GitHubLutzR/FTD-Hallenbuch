@@ -54,19 +54,19 @@ $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
 $bis       = $_POST['bis']       ?? '';
 $gruppe    = htmlentities($_POST['gruppe']    ?? '', ENT_QUOTES, 'UTF-8');
-$leiter    = htmlentities($_POST['leiter']    ?? '', ENT_QUOTES, 'UTF-8');
+$trainer    = htmlentities($_POST['leiter']    ?? '', ENT_QUOTES, 'UTF-8');
 $vermerk   = htmlentities($_POST['vermerk']   ?? '', ENT_QUOTES, 'UTF-8');
 $bemerkung = htmlentities($_POST['bemerkung'] ?? '', ENT_QUOTES, 'UTF-8');
 $gruppe_sonstige = htmlentities($_POST['gruppe_sonstige'] ?? '', ENT_QUOTES, 'UTF-8');
 
 //$gruppe    = $_POST['gruppe']    ?? '';
-//$leiter    = $_POST['leiter']    ?? '';
+//$trainer    = $_POST['leiter']    ?? '';
 //$vermerk   = $_POST['vermerk']   ?? '';
 //$bemerkung = $_POST['bemerkung'] ?? '';
 //$gruppe_sonstige = $_POST['gruppe_sonstige'] ?? '';
 
 // Pflichtfeldprüfung
-if (!$datum || !$von || !$bis || !$gruppe || !$leiter) {
+if (!$datum || !$von || !$bis || !$gruppe || !$trainer) {
     echo "<p>❌ Fehler: Bitte alle Pflichtfelder ausfüllen.</p>";
     if ($hesk_settings['debug']) {
         echo "<pre>Übermittelte Formulardaten:\n";
@@ -134,7 +134,7 @@ if (!$conn) {
 
 // SQL vorbereiten
 $stmt = mysqli_prepare($conn, "
-    INSERT INTO $table (datum, von, bis, gruppe, leiter, vermerk, bemerkung)
+    INSERT INTO $table (datum, von, bis, gruppe, trainer, vermerk, bemerkung)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
 
@@ -144,7 +144,7 @@ if (!$stmt) {
 }
 
 // Parameter binden und ausführen
-mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $leiter, $vermerk, $bemerkung);
+mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $trainer, $vermerk, $bemerkung);
 
 if (mysqli_stmt_execute($stmt)) {
     $_SESSION['entry_count']++; // Zähler erhöhen

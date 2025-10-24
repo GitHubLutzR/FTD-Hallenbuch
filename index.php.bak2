@@ -215,21 +215,17 @@ updateGruppeList();
     <select id="TrainerSelect">
       <option value="">Bitte wählen</option>
       <?php
-      // sicheres Tabellennamen-Handling
-      $safe_trtable = preg_replace('/[^A-Za-z0-9_]/', '', $trtable);
-      $query_tr = "SELECT trname FROM `{$safe_trtable}` ORDER BY trname ASC";
-      $trresult = mysqli_query($conn, $query_tr);
+      $trresult = mysqli_query($conn, "SELECT trname FROM  `{$trtable}`  ORDER BY name ASC");
       if ($trresult === false) {
-          echo "<option value=''>Fehler beim Laden der Trainer</option>";
           echo "<!-- QUERY ERROR: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . " -->";
       } else {
-          // nutze fetch_all einmal und iteriere das Array (verbraucht Resultset nicht erneut)
-          $trrows = mysqli_fetch_all($trresult, MYSQLI_ASSOC);
-          foreach ($trrows as $row) {
-              $t = htmlspecialchars($row['trname'] ?? $row['name'] ?? '', ENT_QUOTES, 'UTF-8');
-              if ($t === '') continue;
-              echo "<option value=\"$t\">$t</option>";
-          }
+          echo "<!-- QUERY OK; rows: " . mysqli_num_rows($trresult) . " -->";
+          $rows = mysqli_fetch_all($trresult, MYSQLI_ASSOC);
+          echo '<pre>' . htmlspecialchars(print_r($rows, true), ENT_QUOTES, 'UTF-8') . "</pre>\n";
+      }
+      while ($row = mysqli_fetch_assoc($trresult)) {
+          $g = htmlspecialchars($row['trname']);
+          echo "<option value=\"$g\">$g</option>";
       }
       ?>
     </select>
@@ -240,66 +236,55 @@ updateGruppeList();
   </div>
   <ul class="multi-group-list" id="TrainerList"></ul>
   <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer auswählen und auf ➕ Hinzufügen klicken.</div>
-  <input type="hidden" name="trainer" id="TrainerHidden">
-  
-  <script>
-  // Trainer-UI (DOM-ready)
-  (function(){
-    let Trainer = [];
-    const maxTr = 2;
+  <input type="hidden" name="gruppe" id="TrainerHidden">	  
+<script>
+// Trainer-Handling: eindeutige Namen und korrekte Hidden-Input-Name
+let Trainer = [];
 
-    function isTrainerSonstigeSelected() {
-      return Trainer.length === 1 && Trainer[0].toLowerCase() === 'sonstige';
-    }
+function updateTrainerList() {
+  const list = document.getElementById('TrainerList');
+  list.innerHTML = "";
+  Trainer.forEach((t, idx) => {
+    list.innerHTML += `<li>${t} <button type="button" onclick="removeTrainer(${idx})">Entfernen</button></li>`;
+  });
+  document.getElementById('TrainerHidden').value = Trainer.join('/');
+  document.getElementById('TrainerHint').style.display = Trainer.length ? 'none' : 'block';
 
-    function updateTrainerList() {
-      const list = document.getElementById('TrainerList');
-      list.innerHTML = "";
-      Trainer.forEach((t, idx) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${t} <button type="button" onclick="removeTrainer(${idx})">Entfernen</button>`;
-        list.appendChild(li);
-      });
-      document.getElementById('TrainerHidden').value = Trainer.join('/');
-      document.getElementById('TrainerHint').style.display = Trainer.length ? 'none' : 'block';
-      // "sonstige" Verhalten (falls relevant)
-      const sel = document.getElementById('TrainerSelect');
-      const addBtn = document.getElementById('addTrainer');
-      if (isTrainerSonstigeSelected()) {
-        sel.disabled = true;
-        addBtn.disabled = true;
-      } else {
-        sel.disabled = false;
-        addBtn.disabled = false;
-      }
-    }
+  if (isTrainerSonstigeSelected()) {
+    document.getElementById('TrainerSelect').disabled = true;
+    document.getElementById('addTrainer').disabled = true;
+  } else {
+    document.getElementById('TrainerSelect').disabled = false;
+    document.getElementById('addTrainer').disabled = false;
+    const tson = document.getElementById('Trainer_sonstige');
+    if (tson) tson.value = '';
+  }
+}
 
-    document.getElementById('addTrainer').addEventListener('click', function() {
-      const sel = document.getElementById('TrainerSelect');
-      const value = sel.value;
-      if (!value) return alert('Bitte einen Trainer auswählen.');
-      if (Trainer.includes(value)) return alert('Trainer bereits hinzugefügt.');
-      if (Trainer.length >= maxTr) return alert('Maximal ' + maxTr + ' Trainer möglich.');
-      if (value.toLowerCase() === 'sonstige') { Trainer = ['sonstige']; updateTrainerList(); return; }
-      if (Trainer.length === 1 && Trainer[0].toLowerCase() === 'sonstige') return alert('Keine weiteren möglich.');
-      Trainer.push(value);
-      updateTrainerList();
-    });
+document.getElementById('addTrainer').addEventListener('click', function() {
+  const select = document.getElementById('TrainerSelect');
+  const value = select.value;
+  if (!value) return;
+  if (Trainer.length >= 4) { alert("Maximal vier Trainer."); return; }
+  if (Trainer.includes(value)) { alert("Bereits hinzugefügt."); return; }
+  if (value.toLowerCase() === 'sonstige') { Trainer = ['sonstige']; updateTrainerList(); return; }
+  if (Trainer.length === 1 && Trainer[0].toLowerCase() === 'sonstige') { alert("Keine weiteren möglich."); return; }
+  Trainer.push(value);
+  updateTrainerList();
+});
 
-    document.getElementById('clearTrainer').addEventListener('click', function() {
-      Trainer = [];
-      updateTrainerList();
-    });
+document.getElementById('clearTrainer').addEventListener('click', function() {
+  Trainer = [];
+  updateTrainerList();
+});
 
-    window.removeTrainer = function(idx) {
-      Trainer.splice(idx, 1);
-      updateTrainerList();
-    };
+window.removeTrainer = function(idx) {
+  Trainer.splice(idx, 1);
+  updateTrainerList();
+};
 
-    // initial
-    updateTrainerList();
-  })();
-  </script>
+updateTrainerList();
+</script>
 
 <!-- 
   <div class="form-row">

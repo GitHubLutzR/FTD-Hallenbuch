@@ -1,5 +1,7 @@
-<?php 
-//session_start();
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once(__DIR__ . '/config.php');
 require_once(__DIR__ . '/include_public.php');
@@ -34,7 +36,6 @@ if (isset($_GET['rcsubmit'])) {
 $conn = get_db_connection();
 
 global $hesk_settings;
-#$table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 $grtable = $hesk_settings['db_hb_pfix'] . 'gruppen';
 $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
 
@@ -120,7 +121,14 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
     <select id="GruppeSelect">
       <option value="">Bitte wählen</option>
       <?php
-      $result = mysqli_query($conn, "SELECT name FROM  `{$grtable}`  ORDER BY name = 'sonstige' DESC, name ASC");
+      $result = mysqli_query($conn, "SELECT name FROM hb_gruppen ORDER BY name = 'sonstige' DESC, name ASC");
+      // sichere Tabellennamen-Benutzung (nur alphanumerische + Unterstrich erlauben)
+      $safe_grtable = preg_replace('/[^A-Za-z0-9_]/', '', $grtable);
+      $query = "SELECT name FROM `{$safe_grtable}` ORDER BY name = 'sonstige' DESC, name ASC";
+      $result = mysqli_query($conn, $query);
+      if (!$result) {
+          echo "<option value=''>Fehler beim Laden der Gruppen</option>";
+      }
       while ($row = mysqli_fetch_assoc($result)) {
           $g = htmlspecialchars($row['name']);
           echo "<option value=\"$g\">$g</option>";
@@ -209,109 +217,73 @@ window.removeGruppe = function(idx) {
 updateGruppeList();
 </script>
 
-
   <div class="form-row">
-    <label for="Trainer">Trainer/innen:</label>
+    <label for="leiter">Trainer: </label>
     <select id="TrainerSelect">
       <option value="">Bitte wählen</option>
       <?php
-      // sicheres Tabellennamen-Handling
-      $safe_trtable = preg_replace('/[^A-Za-z0-9_]/', '', $trtable);
-      $query_tr = "SELECT trname FROM `{$safe_trtable}` ORDER BY trname ASC";
-      $trresult = mysqli_query($conn, $query_tr);
-      if ($trresult === false) {
-          echo "<option value=''>Fehler beim Laden der Trainer</option>";
-          echo "<!-- QUERY ERROR: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . " -->";
-      } else {
-          // nutze fetch_all einmal und iteriere das Array (verbraucht Resultset nicht erneut)
-          $trrows = mysqli_fetch_all($trresult, MYSQLI_ASSOC);
-          foreach ($trrows as $row) {
-              $t = htmlspecialchars($row['trname'] ?? $row['name'] ?? '', ENT_QUOTES, 'UTF-8');
-              if ($t === '') continue;
-              echo "<option value=\"$t\">$t</option>";
-          }
-      }
+      echo '<!-- BEFORE TRAINER BLOCK -->';
+
+$safe_trtable = preg_replace('/[^A-Za-z0-9_]/', '', $trtable);
+$query_tr = "SELECT name FROM `{$safe_trtable}` ORDER BY name ASC";
+$res_tr = mysqli_query($conn, $query_tr);
+
+if (!$res_tr) {
+    echo '<!-- TRAINER QUERY FAILED: '.htmlspecialchars(mysqli_error($conn)).' -->';
+    echo "<option value=''>Fehler beim Laden der Trainer</option>";
+} else {
+    echo '<!-- TRAINER QUERY OK -->';
+    while ($r = mysqli_fetch_assoc($res_tr)) {
+        $t = htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8');
+        echo "<option value=\"$t\">$t</option>";
+    }
+}
+echo '<!-- AFTER TRAINER BLOCK -->';
       ?>
     </select>
     <button type="button" id="addTrainer">➕ Hinzufügen</button>
     <button type="button" id="clearTrainer">🗑️ Leeren</button>
     <span class="required-star">*</span>
-    <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 2 Trainer</span>
   </div>
   <ul class="multi-group-list" id="TrainerList"></ul>
-  <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer auswählen und auf ➕ Hinzufügen klicken.</div>
-  <input type="hidden" name="trainer" id="TrainerHidden">
-  
-  <script>
-  // Trainer-UI (DOM-ready)
-  (function(){
-    let Trainer = [];
-    const maxTr = 2;
+  <input type="hidden" name="trainer" id="TrainerHidden" required>
 
-    function isTrainerSonstigeSelected() {
-      return Trainer.length === 1 && Trainer[0].toLowerCase() === 'sonstige';
-    }
+<script>
+// Trainer-Auswahl: ein Trainer wird in ein Hidden-Feld übernommen (ähnlich Gruppen-Handling)
+let Trainer = '';
+function updateTrainerDisplay() {
+  const list = document.getElementById('TrainerList');
+  list.innerHTML = '';
+  if (Trainer) {
+    list.innerHTML = `<li>${Trainer} <button type="button" onclick="removeTrainer()">Entfernen</button></li>`;
+    document.getElementById('TrainerHidden').value = Trainer;
+  } else {
+    document.getElementById('TrainerHidden').value = '';
+  }
+}
+document.getElementById('addTrainer').addEventListener('click', function() {
+  const sel = document.getElementById('TrainerSelect');
+  const val = sel.value;
+  if (!val) return alert('Bitte einen Trainer auswählen.');
+  Trainer = val;
+  updateTrainerDisplay();
+});
+document.getElementById('clearTrainer').addEventListener('click', function() {
+  Trainer = '';
+  updateTrainerDisplay();
+});
+window.removeTrainer = function() {
+  Trainer = '';
+  updateTrainerDisplay();
+};
+// initial
+updateTrainerDisplay();
+</script>
 
-    function updateTrainerList() {
-      const list = document.getElementById('TrainerList');
-      list.innerHTML = "";
-      Trainer.forEach((t, idx) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${t} <button type="button" onclick="removeTrainer(${idx})">Entfernen</button>`;
-        list.appendChild(li);
-      });
-      document.getElementById('TrainerHidden').value = Trainer.join('/');
-      document.getElementById('TrainerHint').style.display = Trainer.length ? 'none' : 'block';
-      // "sonstige" Verhalten (falls relevant)
-      const sel = document.getElementById('TrainerSelect');
-      const addBtn = document.getElementById('addTrainer');
-      if (isTrainerSonstigeSelected()) {
-        sel.disabled = true;
-        addBtn.disabled = true;
-      } else {
-        sel.disabled = false;
-        addBtn.disabled = false;
-      }
-    }
-
-    document.getElementById('addTrainer').addEventListener('click', function() {
-      const sel = document.getElementById('TrainerSelect');
-      const value = sel.value;
-      if (!value) return alert('Bitte einen Trainer auswählen.');
-      if (Trainer.includes(value)) return alert('Trainer bereits hinzugefügt.');
-      if (Trainer.length >= maxTr) return alert('Maximal ' + maxTr + ' Trainer möglich.');
-      if (value.toLowerCase() === 'sonstige') { Trainer = ['sonstige']; updateTrainerList(); return; }
-      if (Trainer.length === 1 && Trainer[0].toLowerCase() === 'sonstige') return alert('Keine weiteren möglich.');
-      Trainer.push(value);
-      updateTrainerList();
-    });
-
-    document.getElementById('clearTrainer').addEventListener('click', function() {
-      Trainer = [];
-      updateTrainerList();
-    });
-
-    window.removeTrainer = function(idx) {
-      Trainer.splice(idx, 1);
-      updateTrainerList();
-    };
-
-    // initial
-    updateTrainerList();
-  })();
-  </script>
-
-<!-- 
-  <div class="form-row">
-    <label for="leiter">Leiter: </label>
-    <input type="text" name="leiter" id="leiter" required>
-    <span class="required-star">*</span>
-  </div>
   <div class="form-row">
     <label for="vermerk">Vermerk:</label>
     <input type="text" name="vermerk" id="vermerk">
   </div>
--->
   <div class="form-row">
     <label for="bemerkung">Bemerkung:</label>
     <textarea name="bemerkung" id="bemerkung"></textarea>

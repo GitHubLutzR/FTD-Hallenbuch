@@ -217,7 +217,7 @@ if ($result && mysqli_num_rows($result) > 0) {
         'von'       => ['label' => 'Von',       'width' => '50px'],
         'bis'       => ['label' => 'Bis',       'width' => '50px'],
         'gruppe'    => ['label' => 'Gruppe',    'width' => '100px'],
-        'leiter'    => ['label' => 'Leiter',    'width' => '100px'],
+        'trainer'   => ['label' => 'Trainer',   'width' => '100px'],
         'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
     ];
 

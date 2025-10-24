@@ -16,12 +16,12 @@ if ($result && mysqli_num_rows($result) > 0) {
   echo "<h3>Letzte Einträge:</h3>";
 
   $columnConfig = [
-    'datum'     => ['label' => 'Datum',     'width' => '50px'],
-    'von'       => ['label' => 'Von',       'width' => '22px'],
-    'bis'       => ['label' => 'Bis',       'width' => '22px'],
-    'gruppe'    => ['label' => 'Gruppe',    'width' => '80px'],
-    'leiter'    => ['label' => 'Leiter',    'width' => '70px'],
-    'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
+    'datum'     => ['label' => 'Datum',          'width' => '50px'],
+    'von'       => ['label' => 'Von',            'width' => '22px'],
+    'bis'       => ['label' => 'Bis',            'width' => '22px'],
+    'gruppe'    => ['label' => 'Gruppe',         'width' => '80px'],
+    'trainer'   => ['label' => 'Trainer/-innen', 'width' => '70px'],
+    'bemerkung' => ['label' => 'Bemerkung',      'width' => '200px']
   ];
 
   echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
