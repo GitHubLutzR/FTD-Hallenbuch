@@ -3,6 +3,29 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// --- changed code: eindeutigen Session-Namen pro Instanz setzen und Session einmalig starten
+// Bestimme Host / Instanz-Bezeichner
+$host_ident = $_SERVER['HTTP_HOST'] ?? (getenv('HOSTNAME') ?: 'local');
+$host_ident = preg_replace('/[^a-z0-9_]/i', '_', $host_ident);
+$session_name = 'HB_' . substr($host_ident, 0, 32);
+
+// sichere Cookie-Parameter (müssen vor session_start gesetzt werden)
+$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+session_name($session_name);
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => $_SERVER['HTTP_HOST'] ?? '',
+    'secure' => $secure,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
+// Session nur starten, wenn noch keine aktiv ist
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 if (!defined('IN_SCRIPT')) {
     define('IN_SCRIPT', 1); // HESK erwartet diese Konstante
 }

@@ -2,7 +2,7 @@
 define('IN_SCRIPT', 1);
 require_once 'config.php';
 
-session_start(); // Session starten für Eintragszähler
+//session_start(); // Session starten für Eintragszähler
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);

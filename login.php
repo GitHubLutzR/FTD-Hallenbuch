@@ -1,5 +1,5 @@
 <?php
-session_start();
+//session_start();
 require_once 'config.php';
 $base_url = '/hallenbuch/'; 
 // Debug aktivieren (nur wenn Debug-Flag gesetzt)
