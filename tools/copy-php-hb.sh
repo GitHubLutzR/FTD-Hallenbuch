@@ -17,18 +17,24 @@ dirs=("" "includes" "admin")
 
 if [ "$1" = "l" ]; then
   TARGET_ROOT="/opt/lampp/apache2/htdocs/hallenbuch"
+  if [ ! -d "$TARGET_ROOT" ]; then
+    echo "Zielverzeichnis nicht gefunden, auf dem richtigen Server?"
+    #exit 1
+  fi
   TARGET_USER="root:daemon"
 elif [ "$1" = "o" ]; then
   TARGET_ROOT="$(dirname "$SCRIPT_DIR"|sed 's@git/FTD-Hallenbuch@HESK/hallenbuch@g')"
   if [ "$SRC_REAL" = "$TGT_REAL" ]; then
-    echo "Fehler beim Aufruf, Option l vergessen? (SOURCE_ROOT und TARGET_ROOT dürfen nicht identisch sein!)" >&2
-    exit 1
+	  echo "Fehler beim Aufruf (SOURCE_ROOT und TARGET_ROOT), auf dem richtigen Server?" >&2
+    #exit 1
   fi  
   TARGET_USER="www-data:"
 else
   echo "Aufruf sollte '$0 l' für Lokales Testen, oder '$0 o' für Online-Server sein." >&2
   exit 0
 fi
+
+exit 0
 
 for dir in "${dirs[@]}"; do
   #TARGET_DIR="$TARGET_ROOT/$dir"
