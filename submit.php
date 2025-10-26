@@ -147,7 +147,13 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, 'sssssss', $datum, $von, $bis, $gruppe, $trainer, $vermerk, $bemerkung);
 
 if (mysqli_stmt_execute($stmt)) {
-    $_SESSION['entry_count']++; // Zähler erhöhen
+    // Zähler nur erhöhen, wenn kein eingeloggter Benutzer (z.B. Admin) die Einträge macht
+    if (empty($_SESSION['user'])) {
+        if (!isset($_SESSION['entry_count'])) {
+            $_SESSION['entry_count'] = 0;
+        }
+        $_SESSION['entry_count']++;
+    }
     mysqli_stmt_close($stmt);
     mysqli_close($conn);
     header("Location: index.php?rcsubmit=1");
