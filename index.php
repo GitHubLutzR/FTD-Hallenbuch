@@ -1,4 +1,4 @@
-<?php 
+<?php
 //session_start();
 
 require_once(__DIR__ . '/config.php');
@@ -146,6 +146,11 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
     <input type="text" name="gruppe_sonstige" id="gruppe_sonstige" maxlength="100">
     <span class="required-star">*</span>
   </div>
+  <div class="form-row" id="trainer-sonstige-row" style="display:none;">
+    <label for="trainer_sonstige">Bitte Trainer/ -innen angeben:</label>
+    <input type="text" name="trainer_sonstige" id="trainer_sonstige" maxlength="100">
+    <span class="required-star">*</span>
+  </div>
 
   <ul class="multi-group-list" id="GruppeList"></ul>
   <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
@@ -182,11 +187,22 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
         document.getElementById('GruppeSelect').disabled = true;
         document.getElementById('addGruppe').disabled = true;
         document.getElementById('gruppe-sonstige-row').style.display = 'flex';
+        document.getElementById('trainer-sonstige-row').style.display = 'flex';
+        document.getElementById('TrainerSelect').style.display = 'none';
+        document.getElementById('addTrainer').style.display = 'none';
+        document.getElementById('clearTrainer').style.display = 'none';
+        document.getElementById('TrainerHidden').value = 'sonstige';
       } else {
         document.getElementById('GruppeSelect').disabled = false;
         document.getElementById('addGruppe').disabled = false;
         document.getElementById('gruppe-sonstige-row').style.display = 'none';
+        document.getElementById('trainer-sonstige-row').style.display = 'none';
+        document.getElementById('TrainerSelect').style.display = 'flex';
+        document.getElementById('addTrainer').style.display = 'flex';
+        document.getElementById('clearTrainer').style.display = 'flex';
         document.getElementById('gruppe_sonstige').value = '';
+        document.getElementById('trainer_sonstige').value = '';
+        document.getElementById('TrainerHidden').value = '';
       }
 
      // aktualisiere Trainerliste anhand aktueller Gruppen (IDs)
@@ -257,7 +273,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   <ul class="multi-group-list" id="TrainerList"></ul>
   <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer/-innen auswählen und auf ➕ Hinzufügen klicken.</div>
   <BR><BR> <input type="hidden" name="trainer" id="TrainerHidden">
-  
+
   <?php
 // Serverseitig: Map group_id => [trainerNames] und Gesamtliste aller Trainer
 $safe_trtable = preg_replace('/[^A-Za-z0-9_]/', '', $trtable);
@@ -375,7 +391,7 @@ window.refreshTrainerOptions = refreshTrainerOptions;
 })();
 </script>
 
-  <!-- 
+  <!--
   <div class="form-row">
     <label for="leiter">Leiter: </label>
     <input type="text" name="leiter" id="leiter" required>
@@ -393,7 +409,7 @@ window.refreshTrainerOptions = refreshTrainerOptions;
   <button type="submit">Eintragen</button>
 </form>
 
-<?php 
+<?php
     include 'includes/list_last_entries.php';
-    require_once 'includes/footer.php'; 
+    require_once 'includes/footer.php';
 ?>
