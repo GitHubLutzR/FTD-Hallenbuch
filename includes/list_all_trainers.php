@@ -130,6 +130,53 @@ if (isset($_GET['new']) && $_GET['new'] == '1') {
     echo "</form>";
 }
 
+// --- NEU: Sortierung aus GET lesen und validieren ---
+$allowed_sorts = ['name','group'];
+$allowed_dirs  = ['asc','desc'];
+
+$sort = isset($_GET['sort']) ? strtolower($_GET['sort']) : 'name';
+$dir  = isset($_GET['dir'])  ? strtolower($_GET['dir'])  : 'asc';
+
+if (!in_array($sort, $allowed_sorts, true)) $sort = 'name';
+if (!in_array($dir, $allowed_dirs, true)) $dir = 'asc';
+
+// Basis-Link für Sort-Links (behalte ggf. filter_gid/new/edit params)
+$qs = $_GET;
+unset($qs['sort'], $qs['dir']);
+$base_link = $_SERVER['PHP_SELF'];
+if (!empty($qs)) {
+    $base_link .= '?' . http_build_query($qs) . '&';
+} else {
+    $base_link .= '?';
+}
+
+// Build ORDER BY (JOIN, damit Gruppennamen sortierbar sind)
+$order_sql = 'ORDER BY t.trname ' . ($sort === 'name' ? strtoupper($dir) : 'ASC');
+if ($sort === 'group') {
+    $order_sql = 'ORDER BY g.name ' . strtoupper($dir);
+}
+
+// Query mit Join damit group_name verfügbar ist und sortierbar
+$sql = "
+  SELECT t.trname, t.gruppe_id, g.name AS group_name
+  FROM `{$trainer_table}` AS t
+  LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
+  {$order_sql}
+";
+
+if (isset($filter_gid) && $filter_gid > 0) {
+    // falls Filter aktiv, füge WHERE hinzu
+    $sql = "
+      SELECT t.trname, t.gruppe_id, g.name AS group_name
+      FROM `{$trainer_table}` AS t
+      LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
+      WHERE t.gruppe_id = " . (int)$filter_gid . "
+      {$order_sql}
+    ";
+}
+
+$res = mysqli_query($conn, $sql);
+
 // Tabelle: alle Trainer mit Gruppennamen filterbar
 echo "<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;'>";
 echo "<h3 style='margin:0;'>Liste der Trainer:</h3>";
@@ -152,24 +199,34 @@ echo "</label>";
 echo " <button type='submit' style='padding:6px 10px;'>Filtern</button>";
 echo "</form>";
 
-// Build query
-if ($filter_gid > 0) {
-    $stmt = mysqli_prepare($conn, "SELECT trname, gruppe_id FROM `{$trainer_table}` WHERE gruppe_id = ? ORDER BY trname ASC");
-    mysqli_stmt_bind_param($stmt, 'i', $filter_gid);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
-} else {
-    $res = mysqli_query($conn, "SELECT trname, gruppe_id FROM `{$trainer_table}` ORDER BY trname ASC");
-}
-
+// Tabelle Ausgabe: Header mit sortierbaren Links
 if ($res && mysqli_num_rows($res) > 0) {
+    // berechne toggle dirs für Spalten
+    $next_dir_name  = ($sort === 'name'  && $dir === 'asc')  ? 'desc' : 'asc';
+    $next_dir_group = ($sort === 'group' && $dir === 'asc')  ? 'desc' : 'asc';
+
     echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
-    echo "<tr><th style='border:1px solid #ccc; padding:6px;'>Name</th><th style='border:1px solid #ccc; padding:6px;'>Gruppe</th><th style='border:1px solid #ccc; padding:6px;'>Bearbeiten</th><th style='border:1px solid #ccc; padding:6px;'>Löschen</th></tr>";
+    echo "<tr>";
+    // Name header (Link wechselt sort & dir)
+    $link_name = htmlspecialchars($base_link . 'sort=name&dir=' . $next_dir_name, ENT_QUOTES, 'UTF-8');
+    $arrow_name = ($sort === 'name') ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
+    echo "<th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_name}\">Name{$arrow_name}</a></th>";
+
+    // Gruppe header
+    $link_group = htmlspecialchars($base_link . 'sort=group&dir=' . $next_dir_group, ENT_QUOTES, 'UTF-8');
+    $arrow_group = ($sort === 'group') ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
+    echo "<th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_group}\">Gruppe{$arrow_group}</a></th>";
+
+    echo "<th style='border:1px solid #ccc; padding:6px;'>Bearbeiten</th>";
+    echo "<th style='border:1px solid #ccc; padding:6px;'>Löschen</th>";
+    echo "</tr>";
+
     while ($row = mysqli_fetch_assoc($res)) {
         $trname = $row['trname'];
         $gid = (int)$row['gruppe_id'];
         $display_name = htmlspecialchars($trname, ENT_QUOTES, 'UTF-8');
-        $display_group = isset($groups[$gid]) ? htmlspecialchars($groups[$gid], ENT_QUOTES, 'UTF-8') : '–';
+        // group_name aus JOIN verwenden, fallback auf $groups array falls leer
+        $display_group = (!empty($row['group_name'])) ? htmlspecialchars($row['group_name'], ENT_QUOTES, 'UTF-8') : (isset($groups[$gid]) ? htmlspecialchars($groups[$gid], ENT_QUOTES, 'UTF-8') : '–');
 
         echo "<tr>";
         if ($edit_trname !== null && $edit_trname === $trname && $edit_gid === $gid) {
@@ -195,9 +252,9 @@ if ($res && mysqli_num_rows($res) > 0) {
         } else {
             echo "<td style='border:1px solid #ccc; padding:6px;'>{$display_name}</td>";
             echo "<td style='border:1px solid #ccc; padding:6px;'>{$display_group}</td>";
-            $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_trname=' . urlencode($trname) . '&edit_gid=' . $gid, ENT_QUOTES, 'UTF-8');
+            $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_trname=' . urlencode($trname) . '&edit_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
             echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$edit_url}' title='Bearbeiten'>✏️</a></td>";
-            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete_trname=' . urlencode($trname) . '&confirm_delete_gid=' . $gid, ENT_QUOTES, 'UTF-8');
+            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete_trname=' . urlencode($trname) . '&confirm_delete_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
             echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$confirm_url}' title='Löschen' style='color:#900;'>🗑️</a></td>";
         }
         echo "</tr>";
