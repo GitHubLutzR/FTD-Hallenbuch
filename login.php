@@ -120,7 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // erfolgreich
                     $_SESSION['user'] = $username;
                     $_SESSION['name'] = $name;
-                    header('Location: ' . $base_url . 'admin/admin_menu.php');
+                    //header('Location: ' . $base_url . 'admin/admin_menu.php');
+                    header('Location: ' . $base_url . 'index.php');
                     exit;
                 }
                 // Ende Fetch/Check
