@@ -22,10 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        // zurück zur Liste (ohne ?new=1)
-        $loc = preg_replace('/([?&])new=1(&?)/', '$1', $_SERVER['REQUEST_URI']);
-        $loc = rtrim($loc, '?&');
-        header("Location: " . $loc);
+        // Zur Admin-Gruppen-Seite zurück (vermeidet direkte includes/... URL)
+        header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
 
@@ -39,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header("Location: " . preg_replace('/[?&]confirm_delete=\d+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
 
@@ -55,12 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header("Location: " . preg_replace('/[?&]edit_id=\d+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
 
     if ($action === 'cancel') {
-        header("Location: " . preg_replace('/[?&]edit_id=\d+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
 }
@@ -69,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['confirm_delete'])) {
     $confirm_id = (int)$_GET['confirm_delete'];
     if ($confirm_id <= 0) {
-        header("Location: " . preg_replace('/[?&]confirm_delete=\d+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
     // Gruppe holen

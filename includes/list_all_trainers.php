@@ -12,6 +12,9 @@ $group_table   = $hesk_settings['db_hb_pfix'] . 'gruppen';
 $trainer_table = preg_replace('/[^A-Za-z0-9_]/', '', $trainer_table);
 $group_table   = preg_replace('/[^A-Za-z0-9_]/', '', $group_table);
 
+// Basis‑Ziel-URL für diese Seite (sauber, absolut relativ zum Webroot)
+$self = $base_url . 'includes/list_all_trainers.php';
+
 // POST-Aktionen: create / save / delete / cancel
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -28,9 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         // redirect to avoid resubmit
-        $loc = preg_replace('/([?&])new=1(&?)/', '$1', $_SERVER['REQUEST_URI']);
-        $loc = rtrim($loc, '?&');
-        header("Location: " . $loc);
+        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
         exit;
     }
 
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header("Location: " . preg_replace('/[?&]edit_trname=[^&]+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
         exit;
     }
 
@@ -62,12 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header("Location: " . preg_replace('/[?&]confirm_delete_trname=[^&]+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
         exit;
     }
 
     if ($action === 'cancel') {
-        header("Location: " . preg_replace('/[?&]edit_trname=[^&]+/', '', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
         exit;
     }
 }
@@ -87,7 +88,7 @@ if (isset($_GET['confirm_delete_trname']) && isset($_GET['confirm_delete_gid']))
     $ctname = $_GET['confirm_delete_trname'];
     $cgid = (int)($_GET['confirm_delete_gid']);
     if ($ctname === '' || $cgid <= 0) {
-        header("Location: " . preg_replace('/([?&])(confirm_delete_trname|confirm_delete_gid)=[^&]+(&?)/', '$1', $_SERVER['REQUEST_URI']));
+        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
         exit;
     }
     $ctname_esc = htmlspecialchars($ctname, ENT_QUOTES, 'UTF-8');
