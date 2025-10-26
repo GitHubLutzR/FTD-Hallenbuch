@@ -54,16 +54,11 @@ $datum     = $_POST['datum']     ?? '';
 $von       = $_POST['von']       ?? '';
 $bis       = $_POST['bis']       ?? '';
 $gruppe    = htmlentities($_POST['gruppe']    ?? '', ENT_QUOTES, 'UTF-8');
-$trainer    = htmlentities($_POST['trainer'] ?? $_POST['leiter'] ?? '', ENT_QUOTES, 'UTF-8');
+$trainer    = htmlentities($_POST['trainer']  ?? '', ENT_QUOTES, 'UTF-8');
 $vermerk   = htmlentities($_POST['vermerk']   ?? '', ENT_QUOTES, 'UTF-8');
 $bemerkung = htmlentities($_POST['bemerkung'] ?? '', ENT_QUOTES, 'UTF-8');
 $gruppe_sonstige = htmlentities($_POST['gruppe_sonstige'] ?? '', ENT_QUOTES, 'UTF-8');
-
-//$gruppe    = $_POST['gruppe']    ?? '';
-//$trainer    = $_POST['leiter']    ?? '';
-//$vermerk   = $_POST['vermerk']   ?? '';
-//$bemerkung = $_POST['bemerkung'] ?? '';
-//$gruppe_sonstige = $_POST['gruppe_sonstige'] ?? '';
+$trainer_sonstige = htmlentities($_POST['trainer_sonstige'] ?? '', ENT_QUOTES, 'UTF-8');
 
 // Pflichtfeldprüfung
 if (!$datum || !$von || !$bis || !$gruppe || !$trainer) {
@@ -88,6 +83,16 @@ if (strtolower($gruppe) === 'sonstige') {
     }
     }
     $gruppe = $gruppe_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
+    $trainer_sonstige = trim($trainer_sonstige);
+    if ($trainer_sonstige === '') {
+        die("❌ Fehler: Bitte Trainer/ -innen angeben, wenn 'sonstige' gewählt wurde.");
+        if ($hesk_settings['debug']) {
+        echo "<pre>Übermittelte Formulardaten:\n";
+        print_r($_POST);
+        echo "</pre>";
+    }
+    }
+    $trainer = $trainer_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
 }
 
 // Kombinierten Zeitstempel erzeugen

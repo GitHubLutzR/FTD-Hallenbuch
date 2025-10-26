@@ -16,7 +16,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_session'])) {
 ?>
 
 <header style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>FTD Hallenbuch</h1>
+    <h1 style="margin:0 0 6px 0;">FTD Hallenbuch</h1>
+
+    <div style="display:flex; gap:12px; align-items:center; font-size:0.95em; margin-bottom:12px;">
+      <a href="<?php echo htmlspecialchars($base_url ?? '/hallenbuch/', ENT_QUOTES, 'UTF-8'); ?>" style="text-decoration:none; color:inherit; white-space:nowrap;">
+        <span aria-hidden="true">🏠</span>&nbsp;Startseite
+      </a>
+
+      <a href="<?php echo htmlspecialchars(($base_url ?? '/hallenbuch/') . 'includes/list_all_trainers.php', ENT_QUOTES, 'UTF-8'); ?>" style="text-decoration:none; color:inherit; white-space:nowrap;">
+        <span aria-hidden="true">👤</span>&nbsp;Trainer
+      </a>
+
+      <a href="<?php echo htmlspecialchars(($base_url ?? '/hallenbuch/') . 'includes/list_all_goups.php', ENT_QUOTES, 'UTF-8'); ?>" style="text-decoration:none; color:inherit; white-space:nowrap;">
+        <span aria-hidden="true">👥</span>&nbsp;Gruppen
+      </a>
+
+      <a href="<?php echo htmlspecialchars(($base_url ?? '/hallenbuch/') . 'includes/list_entries_for_delete.php', ENT_QUOTES, 'UTF-8'); ?>" style="text-decoration:none; color:inherit; white-space:nowrap;">
+        <span aria-hidden="true">🗑️</span>&nbsp;Einträge löschen
+      </a>
+    </div>
 
     <?php
     // Login/Logout-Leiste rechts unterhalb der Überschrift

@@ -1,4 +1,8 @@
 <?php
+// sicherstellen, dass Session verfügbar ist
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
+}
 //session_start();
 
 define('IN_SCRIPT', true);
