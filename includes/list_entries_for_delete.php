@@ -53,8 +53,25 @@ if (array_key_exists('filter_date', $_GET) && $_GET['filter_date'] !== '') {
 
 // Limit-Auswahl: wenn ein Filter aktiv ist, Default auf 'ALLE' (oder über GET)
 $limitOptions = [10, 25, 50, 100, 'ALLE'];
-$selectedLimit = $_GET['limit'] ?? ($activeFilter ? 'ALLE' : 10);
-$selectedLimit = in_array($selectedLimit, $limitOptions, true) ? $selectedLimit : 10;
+
+// vorheriger Code ersatzlos ersetzen durch folgende robustere Normalisierung:
+$selectedLimitRaw = $_GET['limit'] ?? ($activeFilter ? 'ALLE' : 10);
+
+if ($selectedLimitRaw === 'ALLE') {
+    $selectedLimit = 'ALLE';
+} else {
+    // numerische Strings in int wandeln, sonst Default benutzen
+    if (is_numeric($selectedLimitRaw)) {
+        $selectedLimit = (int)$selectedLimitRaw;
+    } else {
+        $selectedLimit = ($activeFilter ? 'ALLE' : 10);
+    }
+}
+
+// Validierung gegen erlaubte Optionen (streng prüfen)
+if (!in_array($selectedLimit, $limitOptions, true)) {
+    $selectedLimit = ($activeFilter ? 'ALLE' : 10);
+}
 
 // Filterlogik
 $dateCondition = '';
@@ -195,6 +212,16 @@ echo <<<'JS'
     if (week) week.addEventListener('change', onWeekChange);
     if (month) month.addEventListener('change', onMonthChange);
     if (date) date.addEventListener('change', onDateChange);
+
+    // Neu: bei Änderung der Limit-Auswahl Formular absenden (ohne andere Filter zu verändern)
+    if (limit) {
+        limit.addEventListener('change', function(){
+            // falls du möchtest, dass bei Limitwechsel immer alle Filter zurückgesetzt werden,
+            // entferne die nächsten zwei Zeilen; aktuell bleiben gesetzte Filter erhalten.
+            // clearDate(); clearWeek(); clearMonth();
+            f.submit();
+        });
+    }
 })();
 </script>
 JS;
