@@ -46,17 +46,21 @@ if ($check && mysqli_num_rows($check) > 0) {
 // sichere Nutzung des Spaltennamens (nur Alnum + Unterstrich)
 $group_col = preg_replace('/[^A-Za-z0-9_]/', '', $group_col);
 
-// Baue Query mit dem ermittelten Spaltennamen
+// Build query: UNIQUE list of trainers, groups concatenated with " / "
 $sql = "
-  SELECT t.trname AS trname, g.`{$group_col}` AS group_name
+  SELECT
+    TRIM(t.trname) AS trname,
+    GROUP_CONCAT(DISTINCT TRIM(g.`{$group_col}`) ORDER BY TRIM(g.`{$group_col}`) SEPARATOR ' / ') AS groups
   FROM `{$trainer_table}` AS t
   LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
-  ORDER BY t.trname ASC
+  WHERE TRIM(t.trname) <> ''
+  GROUP BY TRIM(t.trname)
+  ORDER BY TRIM(t.trname) ASC
 ";
 
 $res = mysqli_query($conn, $sql);
 
-echo "<div style='margin-bottom:12px;'><h3 style='margin:0;'>Liste der Trainer</h3></div>";
+echo "<div style='margin-bottom:12px;'><h3 style='margin:0;'>Liste der Gruppen pro Trainer</h3></div>";
 
 if ($res === false) {
     echo "<p style='color:#900'>SQL-Fehler: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . "</p>";
@@ -65,18 +69,18 @@ if ($res === false) {
     echo "<p>Keine Trainer gefunden.</p>";
 } else {
     echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
-    echo "<tr><th style='border:1px solid #ccc; padding:6px;'>Name</th><th style='border:1px solid #ccc; padding:6px;'>Gruppe</th></tr>";
+    echo "<tr><th style='border:1px solid #ccc; padding:6px;'>Name</th><th style='border:1px solid #ccc; padding:6px;'>Gruppen</th></tr>";
     while ($row = mysqli_fetch_assoc($res)) {
-        $rawName = $row['trname'] ?? '';
-        $rawGroup = $row['group_name'] ?? '';
+        $rawName  = $row['trname']  ?? '';
+        $rawGroups= $row['groups']   ?? '';
 
         // Entities decodieren, dann für HTML escapen — sorgt für korrekte Umlaute
-        $name = htmlspecialchars(html_entity_decode($rawName, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $group = $rawGroup !== '' ? htmlspecialchars(html_entity_decode($rawGroup, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
+        $name   = htmlspecialchars(html_entity_decode($rawName,  ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        $groups = $rawGroups !== '' ? htmlspecialchars(html_entity_decode($rawGroups, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
 
         echo "<tr>";
         echo "<td style='border:1px solid #ccc; padding:6px;'>{$name}</td>";
-        echo "<td style='border:1px solid #ccc; padding:6px;'>{$group}</td>";
+        echo "<td style='border:1px solid #ccc; padding:6px;'>{$groups}</td>";
         echo "</tr>";
     }
     echo "</table>";
