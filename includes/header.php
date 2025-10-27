@@ -24,7 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_session'])) {
     if (!empty($_SESSION['user'])) {
       echo '<a href="' . $base_url . '" style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">🏠</span>&nbsp;Startseite</a>';
       echo '<a href="' . $base_url . 'includes/list_all_goups.php " style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">👥</span>&nbsp;Gruppen</a>';
+      echo '<a href="' . $base_url . 'includes/list_groups-trainer.php " style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">=</span>&nbsp;G-T</a>';
       echo '<a href="' . $base_url . 'includes/list_all_trainers.php " style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">👤</span>&nbsp;Trainer</a>';
+      echo '<a href="' . $base_url . 'includes/list_trainers-groups.php " style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">-</span>&nbsp;T-G</a>';
       echo '<a href="' . $base_url . 'includes/list_entries_for_delete.php " style="text-decoration:none; color:inherit; white-space:nowrap;"><span aria-hidden="true">🗑️</span>&nbsp;Einträge löschen</a>';
 
 
