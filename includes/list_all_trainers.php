@@ -1,4 +1,5 @@
 <?php
+ob_start(); // <-- fängt frühe Ausgabe ab, verhindert "headers already sent"
 require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../include.php');
 
@@ -204,4 +205,5 @@ echo "</tbody></table>";
 
 mysqli_free_result($res);
 mysqli_close($conn);
+ob_end_flush();
 ?>
