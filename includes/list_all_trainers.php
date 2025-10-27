@@ -134,6 +134,9 @@ if (isset($_GET['new']) && $_GET['new'] == '1') {
     echo "</form>";
 }
 
+// Filter: Gruppe auswählen (muss gesetzt sein, bevor die SQL-Query gebaut wird)
+$filter_gid = isset($_GET['filter_gid']) ? (int)$_GET['filter_gid'] : 0;
+
 // --- NEU: Sortierung aus GET lesen und validieren ---
 $allowed_sorts = ['name','group'];
 $allowed_dirs  = ['asc','desc'];
@@ -160,7 +163,7 @@ if ($sort === 'group') {
     $order_sql = 'ORDER BY g.name ' . strtoupper($dir);
 }
 
-// Query mit Join damit group_name verfügbar ist und sortierbar
+// Query mit Join damit group_name verfügbar ist und sortierbar ist
 $sql = "
   SELECT t.trname, t.gruppe_id, g.name AS group_name
   FROM `{$trainer_table}` AS t
@@ -168,8 +171,7 @@ $sql = "
   {$order_sql}
 ";
 
-if (isset($filter_gid) && $filter_gid > 0) {
-    // falls Filter aktiv, füge WHERE hinzu
+if ($filter_gid > 0) {
     $sql = "
       SELECT t.trname, t.gruppe_id, g.name AS group_name
       FROM `{$trainer_table}` AS t
