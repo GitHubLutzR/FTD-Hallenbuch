@@ -97,6 +97,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
     }
 }
 
+// --- NEU: Inline-Edit speichern ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save' && isset($_POST['id'])) {
+    $id = (int)$_POST['id'];
+    // sanitize inputs
+    $datum     = mysqli_real_escape_string($conn, trim($_POST['datum'] ?? ''));
+    $von       = mysqli_real_escape_string($conn, trim($_POST['von'] ?? ''));
+    $bis       = mysqli_real_escape_string($conn, trim($_POST['bis'] ?? ''));
+    $gruppe    = mysqli_real_escape_string($conn, trim($_POST['gruppe'] ?? ''));
+    $trainer   = mysqli_real_escape_string($conn, trim($_POST['trainer'] ?? ''));
+    $bemerkung = htmlentities(trim($_POST['bemerkung'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+    $updateSql = "
+      UPDATE $table
+      SET datum = '$datum',
+          von = '$von',
+          bis = '$bis',
+          gruppe = '$gruppe',
+          trainer = '$trainer',
+          bemerkung = '$bemerkung'
+      WHERE id = $id
+      LIMIT 1
+    ";
+    mysqli_query($conn, $updateSql);
+
+    // Redirect to avoid repost
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+// --- ENDE Inline-Edit speichern ---
+
 // Einträge abrufen
 $limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
 $sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limitClause";
@@ -259,52 +289,95 @@ if ($result && mysqli_num_rows($result) > 0) {
         'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
     ];
 
-    echo "<form method='POST'>";
+    echo "<form method='POST' id='deleteForm'>";
     echo "<table style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
 
     echo "<tr>";
     echo "<th style='width:30px; border: 1px solid #ccc;'>🗑️</th>";
+    echo "<th style='width:120px; border: 1px solid #ccc;'>Bearbeiten</th>";
     foreach ($columnConfig as $key => $config) {
         echo "<th style='width:{$config['width']}; border: 1px solid #ccc;'>{$config['label']}</th>";
     }
     echo "</tr>";
 
+    // which row is in edit mode (via GET)
+    $editId = isset($_GET['edit_id']) ? (int)$_GET['edit_id'] : 0;
+
     while ($row = mysqli_fetch_assoc($result)) {
+        $rowId = (int)$row['id'];
         echo "<tr>";
+
+        // checkbox cell
         echo "<td style='border: 1px solid #ccc; text-align: center;'>
-                <input type='checkbox' name='delete_ids[]' value='" . (int)$row['id'] . "'>
+                <input type='checkbox' name='delete_ids[]' value='" . $rowId . "'>
               </td>";
 
-        foreach ($columnConfig as $key => $config) {
-            // Rohwert holen
-            $rawVal = $row[$key] ?? '';
+        // Edit cell: either Edit button or Save/Cancel form if this row is being edited
+        if ($editId === $rowId) {
+            // inline edit form spans the edit cell + other cells for inputs
+            echo "<td style='border: 1px solid #ccc; text-align:center;' colspan='1'>";
+            echo "<form method='post' style='margin:0; display:inline-block;'>";
+            echo "<input type='hidden' name='action' value='save'>";
+            echo "<input type='hidden' name='id' value='" . $rowId . "'>";
+            echo "<button type='submit' style='padding:4px 8px;margin-right:6px;'>💾 Speichern</button>";
+            // Cancel: link back to page without edit_id
+            $cancelUrl = htmlspecialchars(preg_replace('/([&?])edit_id=[^&]*/', '', $_SERVER['REQUEST_URI']) , ENT_QUOTES, 'UTF-8');
+            $cancelUrl = rtrim($cancelUrl, '?&');
+            echo "<a href='{$cancelUrl}' style='padding:4px 8px;border:1px solid #ccc;background:#f3f3f3;text-decoration:none;'>Abbrechen</a>";
+            echo "</form>";
+            echo "</td>";
+        } else {
+            // normal Edit link
+            $editUrl = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $rowId . '&limit=' . urlencode($selectedLimitRaw) . ( $selectedDate ? '&filter_date=' . urlencode($selectedDate) : '' ), ENT_QUOTES, 'UTF-8');
+            echo "<td style='border: 1px solid #ccc; text-align:center;'>
+                    <a href=\"{$editUrl}\" title='Bearbeiten' style='display:inline-block;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;text-decoration:none;'>✏️ Edit</a>
+                  </td>";
+        }
 
-            // entities zuerst decodieren, dann sicher für HTML escapen (UTF-8)
+        // For each column: either input fields (if editing this row) or normal display
+        foreach ($columnConfig as $key => $config) {
+            $rawVal = $row[$key] ?? '';
             $value = htmlspecialchars(html_entity_decode($rawVal, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
 
-            // per-column style tweaks
             $cellStyle = "width:{$config['width']}; border: 1px solid #ccc; padding:4px;";
-            // Gruppe: keine Zeilenumbrüche, ellipsis bei Überlauf
             if ($key === 'gruppe') {
                 $cellStyle .= " white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
             }
 
-            if ($key === 'bemerkung' && mb_strlen($value) > 150) {
-                $short = mb_substr($value, 0, 147) . '...';
-                echo "<td style='{$cellStyle}'>$short</td>";
+            if ($editId === $rowId) {
+                // render inputs matching the column
+                if ($key === 'bemerkung') {
+                    echo "<td style='{$cellStyle}'>
+                            <textarea name='bemerkung' formmethod='post' form='dummy' style='width:100%;height:48px;'>" . $value . "</textarea>
+                          </td>";
+                } elseif (in_array($key, ['von','bis'], true)) {
+                    echo "<td style='{$cellStyle}'><input type='time' name='{$key}' value='" . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                } elseif ($key === 'datum') {
+                    // date input expects YYYY-MM-DD -> keep DB format
+                    $dateValue = $value;
+                    // if value displayed as d.m.Y, try to convert back? In DB it's Y-m-d so use raw
+                    echo "<td style='{$cellStyle}'><input type='date' name='datum' value='" . htmlspecialchars($row['datum'] ?? '', ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                } else {
+                    // text inputs for gruppe, trainer, etc.
+                    echo "<td style='{$cellStyle}'><input type='text' name='{$key}' value='" . htmlspecialchars($rawVal, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                }
             } else {
-                // Zeitfelder kürzen auf HH:MM
-                if (in_array($key, ['von', 'bis'], true) && mb_strlen($value) >= 5) {
-                    $value = mb_substr($value, 0, 5);
-                }
-                // Datum umwandeln in TT.MM.JJJJ
-                if ($key === 'datum' && !empty($value)) {
-                    $dateObj = DateTime::createFromFormat('Y-m-d', $value);
-                    if ($dateObj) {
-                        $value = $dateObj->format('d.m.Y');
+                // normal display (shorten bemerkung if long)
+                if ($key === 'bemerkung' && mb_strlen($value) > 150) {
+                    $short = mb_substr($value, 0, 147) . '...';
+                    echo "<td style='{$cellStyle}'>$short</td>";
+                } else {
+                    // cut time fields to HH:MM
+                    if (in_array($key, ['von', 'bis'], true) && mb_strlen($value) >= 5) {
+                        $value = mb_substr($value, 0, 5);
                     }
+                    // format date display
+                    if ($key === 'datum' && !empty($value)) {
+                        $dObj = DateTime::createFromFormat('Y-m-d', $value);
+                        if ($dObj) $value = $dObj->format('d.m.Y');
+                    }
+                    echo "<td style='{$cellStyle}'>$value</td>";
                 }
-                echo "<td style='{$cellStyle}'>$value</td>";
             }
         }
 
@@ -312,7 +385,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     }
 
     echo "</table>";
-    echo "<br><button type='submit' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
+    echo "<br><button type='submit' form='deleteForm' style='padding: 8px 16px;'>Ausgewählte löschen</button>";
     echo "</form>";
 } else {
     echo "<p>Keine Einträge gefunden.</p>";

@@ -1,8 +1,10 @@
 <?php
 define('IN_SCRIPT', 1);
 require_once 'config.php';
-
 //session_start(); // Session starten für Eintragszähler
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -32,13 +34,16 @@ if ($_SESSION['entry_count'] >= 3 && $_SESSION['entry_count'] < 5) {
     if (empty($_POST['captcha']) || $_POST['captcha'] !== 'FTD') {
         echo "<p>🔒 Bitte bestätige, dass du kein Bot bist.</p>";
         echo "<form method='post'>";
+        // sichere Hidden-Felder aus POST (UTF-8 + ENT_QUOTES)
         foreach ($_POST as $key => $val) {
-            echo "<input type='hidden' name='$key' value='" . htmlspecialchars($val) . "'>";
+            $k = htmlspecialchars($key, ENT_QUOTES, 'UTF-8');
+            $v = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+            echo "<input type='hidden' name='{$k}' value='{$v}'>";
         }
         echo "<label>Captcha (Gib 'FTD' ein): <input name='captcha'></label>";
         echo "<button type='submit'>Bestätigen</button>";
         echo "</form>";
-        //exit;
+        exit; // <-- sehr wichtig: stoppt weitere Verarbeitung (keine Inserts/Headers)
     }
 }
 
