@@ -46,7 +46,7 @@ if ($check && mysqli_num_rows($check) > 0) {
 // sichere Nutzung des Spaltennamens (nur Alnum + Unterstrich)
 $group_col = preg_replace('/[^A-Za-z0-9_]/', '', $group_col);
 
-// --- NEU: Sort‑Richtung für Namen aus GET, Basis-Link für Toggle ---
+// --- Sort‑Richtung für Gruppen aus GET, Basis-Link für Toggle ---
 $allowed_dirs = ['asc', 'desc'];
 $dir = isset($_GET['dir']) && in_array(strtolower($_GET['dir']), $allowed_dirs, true) ? strtolower($_GET['dir']) : 'asc';
 
@@ -59,49 +59,51 @@ if (!empty($qs)) {
     $base_link .= '?';
 }
 $next_dir = ($dir === 'asc') ? 'desc' : 'asc';
-
-// sichere Order-Direktive
 $order_dir = strtoupper($dir);
 
-// Build query: UNIQUE list of trainers, groups concatenated with " / "
+// Build query: UNIQUE list of groups, trainers concatenated with " / "
+// Gruppe "sonstige" (case-insensitive) ausschließen
 $sql = "
   SELECT
-    TRIM(t.trname) AS trname,
-    GROUP_CONCAT(DISTINCT TRIM(g.`{$group_col}`) ORDER BY TRIM(g.`{$group_col}`) SEPARATOR ' / ') AS groups
-  FROM `{$trainer_table}` AS t
-  LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
-  WHERE TRIM(t.trname) <> ''
-  GROUP BY TRIM(t.trname)
-  ORDER BY TRIM(t.trname) {$order_dir}
+    g.id AS gid,
+    TRIM(g.`{$group_col}`) AS group_name,
+    GROUP_CONCAT(DISTINCT TRIM(t.trname) ORDER BY TRIM(t.trname) SEPARATOR ' / ') AS trainers
+  FROM `{$group_table}` AS g
+  LEFT JOIN `{$trainer_table}` AS t ON t.gruppe_id = g.id
+  WHERE g.id IS NOT NULL
+    AND TRIM(g.`{$group_col}`) <> ''
+    AND LOWER(TRIM(g.`{$group_col}`)) <> 'sonstige'
+  GROUP BY g.id, TRIM(g.`{$group_col}`)
+  ORDER BY TRIM(g.`{$group_col}`) {$order_dir}
 ";
 
 $res = mysqli_query($conn, $sql);
 
-echo "<div style='margin-bottom:12px;'><h3 style='margin:0;'>Liste der Gruppen pro Trainer/ -innen</h3></div>";
+echo "<div style='margin-bottom:12px;'><h3 style='margin:0;'>Liste der Trainner/ -innen pro Gruppen</h3></div>";
 
 if ($res === false) {
     echo "<p style='color:#900'>SQL-Fehler: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . "</p>";
     echo "<pre>" . htmlspecialchars($sql, ENT_QUOTES, 'UTF-8') . "</pre>";
 } elseif (mysqli_num_rows($res) === 0) {
-    echo "<p>Keine Trainer gefunden.</p>";
+    echo "<p>Keine Gruppen gefunden.</p>";
 } else {
     echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
-    // Name mit Sortierlink (nur Name sortierbar), Gruppe bleibt unveränderlich
-    $link_name = htmlspecialchars($base_link . 'dir=' . $next_dir, ENT_QUOTES, 'UTF-8');
+    // Gruppen mit Sortierlink (nur Gruppen sortierbar), Trainer-Spalte bleibt unverändert
+    $link_group = htmlspecialchars($base_link . 'dir=' . $next_dir, ENT_QUOTES, 'UTF-8');
     $arrow = ($dir === 'asc') ? ' ↑' : ' ↓';
-    echo "<tr><th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_name}\">Name{$arrow}</a></th><th style='border:1px solid #ccc; padding:6px;'>Gruppen</th></tr>";
+    echo "<tr><th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_group}\">Gruppe{$arrow}</a></th><th style='border:1px solid #ccc; padding:6px;'>Trainer</th></tr>";
 
     while ($row = mysqli_fetch_assoc($res)) {
-        $rawName  = $row['trname']  ?? '';
-        $rawGroups= $row['groups']   ?? '';
+        $rawGroup   = $row['group_name'] ?? '';
+        $rawTrainers= $row['trainers'] ?? '';
 
-        // Entities decodieren, dann für HTML escapen — sorgt für korrekte Umlaute
-        $name   = htmlspecialchars(html_entity_decode($rawName,  ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $groups = $rawGroups !== '' ? htmlspecialchars(html_entity_decode($rawGroups, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
+        // immer: html_entity_decode zuerst, dann htmlspecialchars für sicheren, korrekten UTF-8-Output
+        $group_display = $rawGroup !== '' ? htmlspecialchars(html_entity_decode($rawGroup, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
+        $trainers_display = $rawTrainers !== '' ? htmlspecialchars(html_entity_decode($rawTrainers, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
 
         echo "<tr>";
-        echo "<td style='border:1px solid #ccc; padding:6px;'>{$name}</td>";
-        echo "<td style='border:1px solid #ccc; padding:6px;'>{$groups}</td>";
+        echo "<td style='border:1px solid #ccc; padding:6px;'>{$group_display}</td>";
+        echo "<td style='border:1px solid #ccc; padding:6px;'>{$trainers_display}</td>";
         echo "</tr>";
     }
     echo "</table>";
