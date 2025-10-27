@@ -96,7 +96,7 @@ if (isset($_GET['confirm_delete_trname']) && isset($_GET['confirm_delete_gid']))
         exit;
     }
     $ctname_esc = htmlspecialchars($ctname, ENT_QUOTES, 'UTF-8');
-    $gname = isset($groups[$cgid]) ? htmlspecialchars($groups[$cgid], ENT_QUOTES, 'UTF-8') : '–';
+    $gname = isset($groups[$cgid]) ? htmlspecialchars(html_entity_decode($groups[$cgid], ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
     echo "<h3>Trainer löschen</h3>";
     echo "<p>Bitte bestätigen: Trainer <strong>{$ctname_esc}</strong> aus Gruppe <strong>{$gname}</strong> wirklich löschen?</p>";
     echo "<form method='post' style='display:flex; gap:8px; align-items:center;'>";
