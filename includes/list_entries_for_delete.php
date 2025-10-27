@@ -226,6 +226,17 @@ echo <<<'JS'
 </script>
 JS;
 
+// Reduce table row height: smaller font, tighter line-height and padding
+echo '<style>
+  /* table global tweaks */
+  table { font-size:13px; border-collapse:collapse; }
+  table th, table td { line-height:1.15; vertical-align:middle; }
+  /* make Gruppe column not wrap (ellipsis on overflow) */
+  .no-wrap { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* slightly smaller checkboxes/buttons */
+  input[type="checkbox"] { transform: scale(0.95); vertical-align:middle; }
+</style>';
+
 // Überschrift
 if ($activeFilter === 'date') {
     echo "<h3>Einträge für den " . date('d.m.Y', strtotime($formattedDate)) . ":</h3>";
@@ -240,11 +251,11 @@ if ($activeFilter === 'date') {
 // Tabelle
 if ($result && mysqli_num_rows($result) > 0) {
     $columnConfig = [
-        'datum'     => ['label' => 'Datum',     'width' => '80px'],
+        'datum'     => ['label' => 'Datum',     'width' => '50px'],   // schmaler
         'von'       => ['label' => 'Von',       'width' => '50px'],
         'bis'       => ['label' => 'Bis',       'width' => '50px'],
-        'gruppe'    => ['label' => 'Gruppe',    'width' => '100px'],
-        'trainer'   => ['label' => 'Trainer',   'width' => '100px'],
+        'gruppe'    => ['label' => 'Gruppe',    'width' => '260px'],  // breiter
+        'trainer'   => ['label' => 'Trainer',   'width' => '120px'],
         'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
     ];
 
@@ -261,20 +272,30 @@ if ($result && mysqli_num_rows($result) > 0) {
     while ($row = mysqli_fetch_assoc($result)) {
         echo "<tr>";
         echo "<td style='border: 1px solid #ccc; text-align: center;'>
-                <input type='checkbox' name='delete_ids[]' value='{$row['id']}'>
+                <input type='checkbox' name='delete_ids[]' value='" . (int)$row['id'] . "'>
               </td>";
-        foreach ($columnConfig as $key => $config) {
-            // Werte holen, HTML-Entities zurückübersetzen (Umlaute wiederherstellen)
-            $value = htmlspecialchars($row[$key] ?? '');
-            $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
 
-            if ($key === 'bemerkung' && strlen($value) > 150) {
-                $value = substr($value, 0, 147) . '...';
-                echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
+        foreach ($columnConfig as $key => $config) {
+            // Rohwert holen
+            $rawVal = $row[$key] ?? '';
+
+            // entities zuerst decodieren, dann sicher für HTML escapen (UTF-8)
+            $value = htmlspecialchars(html_entity_decode($rawVal, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+
+            // per-column style tweaks
+            $cellStyle = "width:{$config['width']}; border: 1px solid #ccc; padding:4px;";
+            // Gruppe: keine Zeilenumbrüche, ellipsis bei Überlauf
+            if ($key === 'gruppe') {
+                $cellStyle .= " white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
+            }
+
+            if ($key === 'bemerkung' && mb_strlen($value) > 150) {
+                $short = mb_substr($value, 0, 147) . '...';
+                echo "<td style='{$cellStyle}'>$short</td>";
             } else {
                 // Zeitfelder kürzen auf HH:MM
-                if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
-                    $value = substr($value, 0, 5);
+                if (in_array($key, ['von', 'bis'], true) && mb_strlen($value) >= 5) {
+                    $value = mb_substr($value, 0, 5);
                 }
                 // Datum umwandeln in TT.MM.JJJJ
                 if ($key === 'datum' && !empty($value)) {
@@ -283,9 +304,10 @@ if ($result && mysqli_num_rows($result) > 0) {
                         $value = $dateObj->format('d.m.Y');
                     }
                 }
-                echo "<td style='width:{$config['width']}; border: 1px solid #ccc;'>$value</td>";
+                echo "<td style='{$cellStyle}'>$value</td>";
             }
         }
+
         echo "</tr>";
     }
 

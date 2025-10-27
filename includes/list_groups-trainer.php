@@ -87,23 +87,46 @@ if ($res === false) {
 } elseif (mysqli_num_rows($res) === 0) {
     echo "<p>Keine Gruppen gefunden.</p>";
 } else {
-    echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
-    // Gruppen mit Sortierlink (nur Gruppen sortierbar), Trainer-Spalte bleibt unverändert
+    // CSS: schmalere Zeilenhöhe / weniger Padding
+    echo '<style>
+      /* reduzierte Zeilenhöhe für die Tabelle */
+      table.groups-trainer { font-size:13px; border-collapse:collapse; }
+      table.groups-trainer th, table.groups-trainer td {
+        padding:4px 6px;
+        line-height:1.1;
+        vertical-align:middle;
+      }
+      /* Gruppe-Breitensetzung / keine Umbrüche */
+      table.groups-trainer th:first-child, table.groups-trainer td:first-child {
+        width:260px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      /* Trainer-Spalte: ebenfalls keine Zeilenumbrüche */
+      table.groups-trainer td:nth-child(2) {
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+    </style>';
+
+    // Tabelle mit Klasse damit CSS greift
     $link_group = htmlspecialchars($base_link . 'dir=' . $next_dir, ENT_QUOTES, 'UTF-8');
     $arrow = ($dir === 'asc') ? ' ↑' : ' ↓';
+    echo "<table class='groups-trainer' style='table-layout:fixed; width:100%;'>";
     echo "<tr><th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_group}\">Gruppe{$arrow}</a></th><th style='border:1px solid #ccc; padding:6px;'>Trainer</th></tr>";
 
     while ($row = mysqli_fetch_assoc($res)) {
         $rawGroup   = $row['group_name'] ?? '';
         $rawTrainers= $row['trainers'] ?? '';
 
-        // immer: html_entity_decode zuerst, dann htmlspecialchars für sicheren, korrekten UTF-8-Output
         $group_display = $rawGroup !== '' ? htmlspecialchars(html_entity_decode($rawGroup, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
         $trainers_display = $rawTrainers !== '' ? htmlspecialchars(html_entity_decode($rawTrainers, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') : '–';
 
         echo "<tr>";
-        echo "<td style='border:1px solid #ccc; padding:6px;'>{$group_display}</td>";
-        echo "<td style='border:1px solid #ccc; padding:6px;'>{$trainers_display}</td>";
+        echo "<td style='border:1px solid #ccc;'>{$group_display}</td>";
+        echo "<td style='border:1px solid #ccc;'>{$trainers_display}</td>";
         echo "</tr>";
     }
     echo "</table>";

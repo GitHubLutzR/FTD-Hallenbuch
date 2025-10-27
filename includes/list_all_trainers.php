@@ -2,284 +2,206 @@
 require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../include.php');
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+header('Content-Type: text/html; charset=utf-8');
+
 $conn = get_db_connection();
+if (!$conn) {
+    echo "<p>Fehler: DB Verbindung fehlgeschlagen.</p>";
+    exit;
+}
+mysqli_set_charset($conn, 'utf8mb4');
+
 global $hesk_settings;
 
-$trainer_table = $hesk_settings['db_hb_pfix'] . 'trainer';
-$group_table   = $hesk_settings['db_hb_pfix'] . 'gruppen';
-
-// Helper: sichere Tabellennamen (einfache Filterung)
+// sichere Tabellennamen
+$trainer_table = isset($hesk_settings['db_hb_pfix']) ? $hesk_settings['db_hb_pfix'] . 'trainer' : 'trainer';
+$group_table   = isset($hesk_settings['db_hb_pfix']) ? $hesk_settings['db_hb_pfix'] . 'gruppen' : 'gruppen';
 $trainer_table = preg_replace('/[^A-Za-z0-9_]/', '', $trainer_table);
 $group_table   = preg_replace('/[^A-Za-z0-9_]/', '', $group_table);
 
-// Basis‑Ziel-URL für diese Seite (sauber, absolut relativ zum Webroot)
-$self = $_SERVER['REQUEST_URI'];  
-
-// POST-Aktionen: create / save / delete / cancel
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-
-    if ($action === 'create' && isset($_POST['trname'], $_POST['gruppe_id'])) {
-        $trname = trim($_POST['trname']);
-        $gid = (int)$_POST['gruppe_id'];
-        if ($trname !== '' && $gid > 0) {
-            // encode special chars before saving
-            $safe_trname = htmlentities($trname, ENT_QUOTES, 'UTF-8');
-            $stmt = mysqli_prepare($conn, "INSERT INTO `{$trainer_table}` (trname, gruppe_id) VALUES (?, ?)");
-            if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'si', $safe_trname, $gid);
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
+// ermittel Group-Spaltenname (namen oder name)
+$group_col = 'name';
+$chk = mysqli_query($conn, "SHOW COLUMNS FROM `{$group_table}` LIKE 'namen'");
+if ($chk && mysqli_num_rows($chk) > 0) {
+    $group_col = 'namen';
+    mysqli_free_result($chk);
+} else {
+    $chk2 = mysqli_query($conn, "SHOW COLUMNS FROM `{$group_table}` LIKE 'name'");
+    if ($chk2 && mysqli_num_rows($chk2) > 0) {
+        $group_col = 'name';
+        mysqli_free_result($chk2);
+    } else {
+        // fallback: nimm erste Spalte außer id
+        $cols = mysqli_query($conn, "SHOW COLUMNS FROM `{$group_table}`");
+        if ($cols) {
+            while ($c = mysqli_fetch_assoc($cols)) {
+                if ($c['Field'] !== 'id') { $group_col = $c['Field']; break; }
             }
+            mysqli_free_result($cols);
         }
-        // redirect to avoid resubmit
-        header('Location: ' . $self );
-        exit;
     }
+}
+$group_col = preg_replace('/[^A-Za-z0-9_]/', '', $group_col);
 
-    if ($action === 'save' && isset($_POST['old_trname'], $_POST['old_gid'], $_POST['trname'], $_POST['gruppe_id'])) {
-        $old_trname = trim($_POST['old_trname']);
-        $old_gid = (int)$_POST['old_gid'];
-        $trname = trim($_POST['trname']);
-        $gid = (int)$_POST['gruppe_id'];
-        if ($old_trname !== '' && $trname !== '' && $gid > 0) {
-            // encode special chars before saving
-            $safe_trname = htmlentities($trname, ENT_QUOTES, 'UTF-8');
+// helper: decode entities then escape for output
+function safe_html($s) {
+    if ($s === null) return '';
+    return htmlspecialchars(html_entity_decode($s, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+}
+
+// POST: speichern (inline edit)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'save' && isset($_POST['old_trname'], $_POST['old_gid'], $_POST['trname'], $_POST['gruppe_id'])) {
+        $old_trname = $_POST['old_trname'];
+        $old_gid    = (int)$_POST['old_gid'];
+        $new_trname = trim($_POST['trname']);
+        $new_gid    = (int)$_POST['gruppe_id'];
+
+        if ($new_trname !== '' && $old_gid > 0) {
+            // encode special chars before saving (keeps DB consistent with earlier changes)
+            $safe_trname = htmlentities($new_trname, ENT_QUOTES, 'UTF-8');
             $stmt = mysqli_prepare($conn, "UPDATE `{$trainer_table}` SET trname = ?, gruppe_id = ? WHERE trname = ? AND gruppe_id = ? LIMIT 1");
             if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'sisi', $safe_trname, $gid, $old_trname, $old_gid);
+                mysqli_stmt_bind_param($stmt, 'sisi', $safe_trname, $new_gid, $old_trname, $old_gid);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
             }
         }
-        header('Location: ' . $self );
+        // redirect to avoid repost
+        header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 
-    if ($action === 'delete' && isset($_POST['trname'], $_POST['gruppe_id'])) {
-        $trname = trim($_POST['trname']);
-        $gid = (int)$_POST['gruppe_id'];
-        if ($trname !== '' && $gid > 0) {
+    if ($_POST['action'] === 'delete' && isset($_POST['del_trname'], $_POST['del_gid'])) {
+        $del_trname = $_POST['del_trname'];
+        $del_gid = (int)$_POST['del_gid'];
+        if ($del_gid >= 0 && $del_trname !== '') {
             $stmt = mysqli_prepare($conn, "DELETE FROM `{$trainer_table}` WHERE trname = ? AND gruppe_id = ? LIMIT 1");
             if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'si', $trname, $gid);
+                mysqli_stmt_bind_param($stmt, 'si', $del_trname, $del_gid);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
             }
         }
-        header('Location: ' . $self );
-        exit;
-    }
-
-    if ($action === 'cancel') {
-        header('Location: ' . $self );
+        header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 }
 
-// Holen aller Gruppen für Dropdowns
-$groups = [];
-$gres = mysqli_query($conn, "SELECT id, name FROM `{$group_table}` ORDER BY name ASC");
-if ($gres) {
-    while ($g = mysqli_fetch_assoc($gres)) {
-        $groups[(int)$g['id']] = $g['name'];
-    }
-    mysqli_free_result($gres);
-}
-
-// Confirm-Delete Seite (PHP-Bestätigung), wenn gesetzt
-if (isset($_GET['confirm_delete_trname']) && isset($_GET['confirm_delete_gid'])) {
-    $ctname = $_GET['confirm_delete_trname'];
-    $cgid = (int)($_GET['confirm_delete_gid']);
-    if ($ctname === '' || $cgid <= 0) {
-        header('Location: ' . $self );
-        exit;
-    }
-    $ctname_esc = htmlspecialchars($ctname, ENT_QUOTES, 'UTF-8');
-    $gname = isset($groups[$cgid]) ? htmlspecialchars($groups[$cgid], ENT_QUOTES, 'UTF-8') : '–';
-    echo "<h3>Trainer löschen</h3>";
-    echo "<p>Bitte bestätigen: Trainer <strong>{$ctname_esc}</strong> aus Gruppe <strong>{$gname}</strong> wirklich löschen?</p>";
-    echo "<form method='post' style='display:flex; gap:8px; align-items:center;'>";
-    echo "<input type='hidden' name='action' value='delete'>";
-    echo "<input type='hidden' name='trname' value='" . htmlspecialchars($ctname, ENT_QUOTES, 'UTF-8') . "'>";
-    echo "<input type='hidden' name='gruppe_id' value='{$cgid}'>";
-    echo "<button type='submit' style='background:#c00;color:#fff;border:none;padding:6px 10px;cursor:pointer;'>Trainer löschen</button>";
-    $back = preg_replace('/([?&])(confirm_delete_trname|confirm_delete_gid)=[^&]+(&?)/', '$1', $_SERVER['REQUEST_URI']);
-    $back = rtrim($back, '?&');
-    echo " <a href='".htmlspecialchars($back, ENT_QUOTES, 'UTF-8')."' style='padding:6px 10px; background:#eee; text-decoration:none; color:#000; border:1px solid #ccc;'>Abbrechen</a>";
-    echo "</form>";
-    exit;
-}
-
-// Edit key from GET (old trname + gid)
-$edit_trname = isset($_GET['edit_trname']) ? $_GET['edit_trname'] : null;
-$edit_gid = isset($_GET['edit_gid']) ? (int)$_GET['edit_gid'] : 0;
-
-// Optional: New trainer form if ?new=1
-if (isset($_GET['new']) && $_GET['new'] == '1') {
-    echo "<h3>Neuen Trainer anlegen</h3>";
-    echo "<form method='post' style='display:flex; gap:8px; align-items:center; margin-bottom:12px;'>";
-    echo "<input type='hidden' name='action' value='create'>";
-    echo "<input type='text' name='trname' placeholder='Name des Trainers' required style='padding:6px;border:1px solid #ccc;border-radius:4px;'>";
-    echo "<select name='gruppe_id' required style='padding:6px;border:1px solid #ccc;border-radius:4px;'>";
-    echo "<option value=''>Bitte Gruppe wählen</option>";
-    foreach ($groups as $gid => $gname) {
-        echo "<option value='".(int)$gid."'>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
-    }
-    echo "</select>";
-    echo "<button type='submit' style='padding:6px 10px; background:#28a745;color:#fff;border:none;border-radius:4px;'>Anlegen</button>";
-    $cancel_url = preg_replace('/([?&])new=1(&?)/', '$1', $_SERVER['REQUEST_URI']);
-    $cancel_url = rtrim($cancel_url, '?&');
-    echo " <a href='".htmlspecialchars($cancel_url, ENT_QUOTES, 'UTF-8')."' style='padding:6px 10px; background:#eee; text-decoration:none; color:#000; border:1px solid #ccc; border-radius:4px;'>Abbrechen</a>";
-    echo "</form>";
-}
-
-// --- NEU: Sortierung aus GET lesen und validieren ---
-$allowed_sorts = ['name','group'];
-$allowed_dirs  = ['asc','desc'];
-
-$sort = isset($_GET['sort']) ? strtolower($_GET['sort']) : 'name';
-$dir  = isset($_GET['dir'])  ? strtolower($_GET['dir'])  : 'asc';
-
-if (!in_array($sort, $allowed_sorts, true)) $sort = 'name';
-if (!in_array($dir, $allowed_dirs, true)) $dir = 'asc';
-
-// Basis-Link für Sort-Links (behalte ggf. filter_gid/new/edit params)
-$qs = $_GET;
-unset($qs['sort'], $qs['dir']);
-$base_link = $_SERVER['PHP_SELF'];
-if (!empty($qs)) {
-    $base_link .= '?' . http_build_query($qs) . '&';
-} else {
-    $base_link .= '?';
-}
-
-// Build ORDER BY (JOIN, damit Gruppennamen sortierbar sind)
-$order_sql = 'ORDER BY t.trname ' . ($sort === 'name' ? strtoupper($dir) : 'ASC');
-if ($sort === 'group') {
-    $order_sql = 'ORDER BY g.name ' . strtoupper($dir);
-}
-
-// Query mit Join damit group_name verfügbar ist und sortierbar
+// einfache Abfrage: Trainer mit Gruppenname (keine Filter-Funktionen)
 $sql = "
-  SELECT t.trname, t.gruppe_id, g.name AS group_name
+  SELECT t.trname AS trname, t.gruppe_id AS gid, g.`{$group_col}` AS group_name
   FROM `{$trainer_table}` AS t
   LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
-  {$order_sql}
+  ORDER BY TRIM(t.trname) ASC
 ";
-
-if (isset($filter_gid) && $filter_gid > 0) {
-    // falls Filter aktiv, füge WHERE hinzu
-    $sql = "
-      SELECT t.trname, t.gruppe_id, g.name AS group_name
-      FROM `{$trainer_table}` AS t
-      LEFT JOIN `{$group_table}` AS g ON g.id = t.gruppe_id
-      WHERE t.gruppe_id = " . (int)$filter_gid . "
-      {$order_sql}
-    ";
-}
 
 $res = mysqli_query($conn, $sql);
 
-// Tabelle: alle Trainer mit Gruppennamen filterbar
-echo "<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;'>";
-echo "<h3 style='margin:0;'>Liste der Trainer:</h3>";
-$new_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?new=1', ENT_QUOTES, 'UTF-8');
-echo "<a href='{$new_url}' style='padding:8px 12px; background:#2b7cff; color:#fff; text-decoration:none; border-radius:4px;'>➕ Neuer Trainer</a>";
-echo "</div>";
+// CSS: schmalere Zeilen
+echo '<style>
+  .slim-table { font-size:13px; border-collapse:collapse; width:100%; table-layout:fixed; }
+  .slim-table th, .slim-table td { padding:4px 6px; line-height:1.05; vertical-align:middle; border:1px solid #ccc; }
+  .slim-table td:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:40%; }
+  .slim-table td:nth-child(2) { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:40%; }
+  .slim-table td:nth-child(3), .slim-table td:nth-child(4) { text-align:center; width:10%; }
+  .slim-input { padding:3px 6px; font-size:13px; }
+  form.inline { margin:0; display:inline-block; }
+</style>';
 
-// Filter: Gruppe auswählen
-$filter_gid = isset($_GET['filter_gid']) ? (int)$_GET['filter_gid'] : 0;
-echo "<form method='get' style='margin-bottom:12px; display:flex; gap:8px; align-items:center;'>";
-echo "<label>Gruppe: ";
-echo "<select name='filter_gid'>";
-echo "<option value='0'>Alle</option>";
-foreach ($groups as $gid => $gname) {
-    $sel = ($gid === $filter_gid) ? " selected" : "";
-    echo "<option value='".(int)$gid."'{$sel}>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
+echo "<h3>Liste der Trainer</h3>";
+
+if ($res === false) {
+    echo "<p style='color:#900'>SQL-Fehler: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . "</p>";
+    echo "<pre>" . htmlspecialchars($sql, ENT_QUOTES, 'UTF-8') . "</pre>";
+    mysqli_close($conn);
+    exit;
 }
-echo "</select>";
-echo "</label>";
-echo " <button type='submit' style='padding:6px 10px;'>Filtern</button>";
-echo "</form>";
 
-// Tabelle Ausgabe: Header mit sortierbaren Links
-if ($res && mysqli_num_rows($res) > 0) {
-    // berechne toggle dirs für Spalten
-    $next_dir_name  = ($sort === 'name'  && $dir === 'asc')  ? 'desc' : 'asc';
-    $next_dir_group = ($sort === 'group' && $dir === 'asc')  ? 'desc' : 'asc';
-
-    echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
-    echo "<tr>";
-    // Name header (Link wechselt sort & dir)
-    $link_name = htmlspecialchars($base_link . 'sort=name&dir=' . $next_dir_name, ENT_QUOTES, 'UTF-8');
-    $arrow_name = ($sort === 'name') ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
-    echo "<th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_name}\">Name{$arrow_name}</a></th>";
-
-    // Gruppe header
-    $link_group = htmlspecialchars($base_link . 'sort=group&dir=' . $next_dir_group, ENT_QUOTES, 'UTF-8');
-    $arrow_group = ($sort === 'group') ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
-    echo "<th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_group}\">Gruppe{$arrow_group}</a></th>";
-
-    echo "<th style='border:1px solid #ccc; padding:6px;'>Bearbeiten</th>";
-    echo "<th style='border:1px solid #ccc; padding:6px;'>Löschen</th>";
-    echo "</tr>";
-
-    while ($row = mysqli_fetch_assoc($res)) {
-        $trname = $row['trname'] ?? '';
-        $gid = (int)($row['gruppe_id'] ?? 0);
-
-        // decode any HTML entities from DB, then escape for safe output (fixes Umlaut-Mojibake)
-        $display_name = htmlspecialchars(
-            html_entity_decode($trname, ENT_QUOTES, 'UTF-8'),
-            ENT_QUOTES,
-            'UTF-8'
-        );
-
-        // group_name aus JOIN verwenden, fallback auf $groups array falls leer
-        $raw_group = !empty($row['group_name']) ? $row['group_name'] : ($groups[$gid] ?? '');
-        $display_group = $raw_group !== '' 
-            ? htmlspecialchars(html_entity_decode($raw_group, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') 
-            : '–';
-
-        echo "<tr>";
-        if ($edit_trname !== null && $edit_trname === $trname && $edit_gid === $gid) {
-            // Inline edit form (identify by old trname + old gid)
-            $escaped = htmlspecialchars($trname, ENT_QUOTES, 'UTF-8');
-            echo "<td style='border:1px solid #ccc; padding:6px;'>
-                    <form method='post' style='display:flex; gap:8px; align-items:center; margin:0;'>
-                      <input type='hidden' name='action' value='save'>
-                      <input type='hidden' name='old_trname' value=\"".htmlspecialchars($trname, ENT_QUOTES, 'UTF-8')."\">
-                      <input type='hidden' name='old_gid' value='{$gid}'>
-                      <input type='text' name='trname' value=\"{$escaped}\" style='padding:6px;border:1px solid #ccc;'>
-                    </td>";
-            echo "<td style='border:1px solid #ccc; padding:6px;'>
-                      <select name='gruppe_id'>";
-            foreach ($groups as $ggid => $gname) {
-                $s = ($ggid === $gid) ? " selected" : "";
-                echo "<option value='".(int)$ggid."'{$s}>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
-            }
-            echo "</select></td>";
-            echo "<td style='border:1px solid #ccc; padding:6px;'><button type='submit'>Speichern</button></td>";
-            echo "<td style='border:1px solid #ccc; padding:6px;'><button type='submit' name='action' value='cancel'>Abbrechen</button></td>";
-            echo "</form>";
-        } else {
-            echo "<td style='border:1px solid #ccc; padding:6px;'>{$display_name}</td>";
-            echo "<td style='border:1px solid #ccc; padding:6px;'>{$display_group}</td>";
-            $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_trname=' . urlencode($trname) . '&edit_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
-            echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$edit_url}' title='Bearbeiten'>✏️</a></td>";
-            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete_trname=' . urlencode($trname) . '&confirm_delete_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
-            echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$confirm_url}' title='Löschen' style='color:#900;'>🗑️</a></td>";
-        }
-        echo "</tr>";
-    }
-    echo "</table>";
-} else {
+if (mysqli_num_rows($res) === 0) {
     echo "<p>Keine Trainer gefunden.</p>";
+    mysqli_free_result($res);
+    mysqli_close($conn);
+    exit;
 }
 
-if (isset($stmt) && is_object($stmt)) { mysqli_stmt_close($stmt); }
-if (isset($res) && is_object($res)) { mysqli_free_result($res); }
+echo "<table class='slim-table'>";
+echo "<thead><tr><th>Name</th><th>Gruppe</th><th>Bearbeiten</th><th>Löschen</th></tr></thead><tbody>";
 
+while ($row = mysqli_fetch_assoc($res)) {
+    $rawName  = $row['trname'] ?? '';
+    $rawGroup = $row['group_name'] ?? '';
+    $gid      = (int)($row['gid'] ?? 0);
+
+    $display_name  = safe_html($rawName);
+    $display_group = $rawGroup !== '' ? safe_html($rawGroup) : '–';
+
+    echo "<tr>";
+
+    // If editing this row: show inline form
+    $is_edit = (isset($_GET['edit_trname'], $_GET['edit_gid']) && $_GET['edit_trname'] === $rawName && (int)$_GET['edit_gid'] === $gid);
+
+    if ($is_edit) {
+        // inline edit: fields for trname + gruppe_id (select built from groups table)
+        echo "<td>";
+        echo "<form method='post' class='inline'>";
+        echo "<input type='hidden' name='action' value='save'>";
+        // keep raw trname value for WHERE comparison
+        echo "<input type='hidden' name='old_trname' value=\"" . htmlspecialchars($rawName, ENT_QUOTES, 'UTF-8') . "\">";
+        echo "<input type='hidden' name='old_gid' value='" . $gid . "'>";
+        echo "<input class='slim-input' type='text' name='trname' value=\"" . htmlspecialchars(html_entity_decode($rawName, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') . "\">";
+        echo "</td>";
+
+        // gruppe select
+        echo "<td>";
+        echo "<select name='gruppe_id' class='slim-input'>";
+        // load groups for select
+        $gq = "SELECT id, `{$group_col}` AS gname FROM `{$group_table}` ORDER BY `{$group_col}` ASC";
+        $gr = mysqli_query($conn, $gq);
+        if ($gr) {
+            while ($g = mysqli_fetch_assoc($gr)) {
+                $ggid = (int)$g['id'];
+                $gname = $g['gname'] ?? '';
+                $sel = ($ggid === $gid) ? ' selected' : '';
+                echo "<option value='" . $ggid . "'{$sel}>" . safe_html($gname) . "</option>";
+            }
+            mysqli_free_result($gr);
+        }
+        echo "</select>";
+        echo "</td>";
+
+        echo "<td colspan='2' style='text-align:center;'>";
+        echo "<button class='slim-input' type='submit'>Speichern</button> ";
+        echo "<a class='slim-input' href='" . htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') . "' style='text-decoration:none;padding:4px 6px;border:1px solid #ccc;background:#f3f3f3;color:#000;border-radius:3px;margin-left:6px;'>Abbrechen</a>";
+        echo "</form>";
+        echo "</td>";
+    } else {
+        // normal row
+        echo "<td>{$display_name}</td>";
+        echo "<td>{$display_group}</td>";
+
+        // Edit link: go to same page with edit params (use raw DB value so matching works)
+        $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_trname=' . urlencode($rawName) . '&edit_gid=' . $gid, ENT_QUOTES, 'UTF-8');
+        echo "<td><a href=\"{$edit_url}\" title='Bearbeiten'>✏️</a></td>";
+
+        // Delete: small POST form to avoid accidental GET deletes
+        echo "<td>";
+        echo "<form method='post' class='inline' onsubmit=\"return confirm('Wirklich löschen?');\">";
+        echo "<input type='hidden' name='action' value='delete'>";
+        echo "<input type='hidden' name='del_trname' value=\"" . htmlspecialchars($rawName, ENT_QUOTES, 'UTF-8') . "\">";
+        echo "<input type='hidden' name='del_gid' value='" . $gid . "'>";
+        echo "<button class='slim-input' type='submit' style='background:transparent;border:none;cursor:pointer;color:#900;'>🗑️</button>";
+        echo "</form>";
+        echo "</td>";
+    }
+
+    echo "</tr>";
+}
+
+echo "</tbody></table>";
+
+mysqli_free_result($res);
 mysqli_close($conn);
 ?>

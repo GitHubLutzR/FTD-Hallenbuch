@@ -85,11 +85,22 @@ if ($res === false) {
 } elseif (mysqli_num_rows($res) === 0) {
     echo "<p>Keine Trainer gefunden.</p>";
 } else {
-    echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
+    // Reduce row height: smaller font, tighter line-height and less padding
+    echo '<style>
+      .slim-table { font-size:13px; border-collapse:collapse; }
+      .slim-table th, .slim-table td { padding:4px 6px; line-height:1.05; vertical-align:middle; }
+      /* prevent wrapping in group column and trainer column (ellipsis) */
+      .slim-table td { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      /* allow group column to be a bit wider if needed */
+      .slim-table th:first-child, .slim-table td:first-child { width:260px; }
+    </style>';
+
+    // use the slim-table class on the table element
+    echo "<table class='slim-table' style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
     // Name mit Sortierlink (nur Name sortierbar), Gruppe bleibt unveränderlich
     $link_name = htmlspecialchars($base_link . 'dir=' . $next_dir, ENT_QUOTES, 'UTF-8');
     $arrow = ($dir === 'asc') ? ' ↑' : ' ↓';
-    echo "<tr><th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_name}\">Name{$arrow}</a></th><th style='border:1px solid #ccc; padding:6px;'>Gruppen</th></tr>";
+    echo "<tr><th style='border:1px solid #ccc;'><a href=\"{$link_name}\">Name{$arrow}</a></th><th style='border:1px solid #ccc;'>Gruppen</th></tr>";
 
     while ($row = mysqli_fetch_assoc($res)) {
         $rawName  = $row['trname']  ?? '';

@@ -114,41 +114,53 @@ $sql = "SELECT * FROM $table ORDER BY name ASC";
 $result = mysqli_query($conn, $sql);
 
 if ($result && mysqli_num_rows($result) > 0) {
-  // Header mit Abstand und "Neue Gruppe"-Knopf
-  echo "<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;'>";
-  echo "<h3 style='margin:0;'>Liste der Gruppen:</h3>";
-  // Button: öffnet Formular (?new=1)
-  $new_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?new=1', ENT_QUOTES, 'UTF-8');
-  echo "<a href='{$new_url}' style='padding:8px 12px; background:#2b7cff; color:#fff; text-decoration:none; border-radius:4px;'>➕ Neue Gruppe</a>";
-  echo "</div>";
+    // Header mit Abstand und "Neue Gruppe"-Knopf
+    echo "<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;'>";
+    echo "<h3 style='margin:0;'>Liste der Gruppen:</h3>";
+    // Button: öffnet Formular (?new=1)
+    $new_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?new=1', ENT_QUOTES, 'UTF-8');
+    echo "<a href='{$new_url}' style='padding:8px 12px; background:#2b7cff; color:#fff; text-decoration:none; border-radius:4px;'>➕ Neue Gruppe</a>";
+    echo "</div>";
 
-  // Falls ?new=1 gesetzt ist, zeige das Eingabeformular oberhalb der Tabelle
-  if (isset($_GET['new']) && $_GET['new'] == '1') {
-      echo "<form method='post' style='display:flex; gap:8px; align-items:center; margin-bottom:12px;'>";
-      echo "<input type='hidden' name='action' value='create'>";
-      echo "<input type='text' name='name' placeholder='Name der neuen Gruppe' required style='flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;'>";
-      echo "<button type='submit' style='padding:6px 10px; background:#28a745;color:#fff;border:none;border-radius:4px;'>Anlegen</button>";
-      $cancel_url = preg_replace('/([?&])new=1(&?)/', '$1', $_SERVER['REQUEST_URI']);
-      $cancel_url = rtrim($cancel_url, '?&');
-      echo " <a href='".htmlspecialchars($cancel_url, ENT_QUOTES, 'UTF-8')."' style='padding:6px 10px; background:#eee; text-decoration:none; color:#000; border:1px solid #ccc; border-radius:4px;'>Abbrechen</a>";
-      echo "</form>";
-  }
+    // Falls ?new=1 gesetzt ist, zeige das Eingabeformular oberhalb der Tabelle
+    if (isset($_GET['new']) && $_GET['new'] == '1') {
+        echo "<form method='post' style='display:flex; gap:8px; align-items:center; margin-bottom:12px;'>";
+        echo "<input type='hidden' name='action' value='create'>";
+        echo "<input type='text' name='name' placeholder='Name der neuen Gruppe' required style='flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;'>";
+        echo "<button type='submit' style='padding:6px 10px; background:#28a745;color:#fff;border:none;border-radius:4px;'>Anlegen</button>";
+        $cancel_url = preg_replace('/([?&])new=1(&?)/', '$1', $_SERVER['REQUEST_URI']);
+        $cancel_url = rtrim($cancel_url, '?&');
+        echo " <a href='".htmlspecialchars($cancel_url, ENT_QUOTES, 'UTF-8')."' style='padding:6px 10px; background:#eee; text-decoration:none; color:#000; border:1px solid #ccc; border-radius:4px;'>Abbrechen</a>";
+        echo "</form>";
+    }
 
-  echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
-  echo "<tr>";
-  echo "<th style='width:70%; border:1px solid #ccc; padding:4px;'>Gruppenname</th>";
-  echo "<th style='width:15%; border:1px solid #ccc; padding:4px;'>Bearbeiten</th>";
-  echo "<th style='width:15%; border:1px solid #ccc; padding:4px;'>Löschen</th>";
-  echo "</tr>";
+    // CSS: schmalere Zeilenhöhe / weniger Padding
+    echo '<style>
+      /* schmalere Tabellenzeilen */
+      .last-entries { font-size:13px; border-collapse:collapse; }
+      .last-entries th, .last-entries td { padding:4px 6px; line-height:1.05; vertical-align:middle; border:1px solid #ccc; }
+      /* lange Gruppennamen nicht umbrechen, Ellipsis bei Überlauf */
+      .last-entries td:first-child, .last-entries th:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:70%; }
+      .last-entries td:nth-child(2), .last-entries th:nth-child(2) { width:15%; text-align:center; }
+      .last-entries td:nth-child(3), .last-entries th:nth-child(3) { width:15%; text-align:center; }
+      input[type="checkbox"] { transform: scale(0.95); vertical-align:middle; }
+    </style>';
 
-  while ($row = mysqli_fetch_assoc($result)) {
-    $id = (int)$row['id'];
-    $name = html_entity_decode($row['name'] ?? '', ENT_QUOTES, 'UTF-8');
+    echo "<table class='last-entries' style='table-layout: fixed; width: 100%;'>";
     echo "<tr>";
-    if ($edit_id === $id) {
-        // Inline-Edit-Formular
-        $escaped = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        echo "<td style='border:1px solid #ccc; padding:4px;'>
+    echo "<th style='width:70%;'>Gruppenname</th>";
+    echo "<th style='width:15%;'>Bearbeiten</th>";
+    echo "<th style='width:15%;'>Löschen</th>";
+    echo "</tr>";
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $id = (int)$row['id'];
+        $name = html_entity_decode($row['name'] ?? '', ENT_QUOTES, 'UTF-8');
+        echo "<tr>";
+        if ($edit_id === $id) {
+            // Inline-Edit-Formular
+            $escaped = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+            echo "<td style='border:1px solid #ccc; padding:4px;'>
                 <form method='post' style='margin:0; display:flex; gap:8px; align-items:center;'>
                   <input type='hidden' name='action' value='save'>
                   <input type='hidden' name='id' value='{$id}'>
@@ -157,31 +169,31 @@ if ($result && mysqli_num_rows($result) > 0) {
                   <button type='submit' name='action' value='cancel'>Abbrechen</button>
                 </form>
               </td>";
-        echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
-        echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
-    } else {
-        // Anzeige mit Aktionen
-        $display = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        echo "<td style='border:1px solid #ccc; padding:4px;'>$display</td>";
+            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
+            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
+        } else {
+            // Anzeige mit Aktionen
+            $display = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+            echo "<td style='border:1px solid #ccc; padding:4px;'>$display</td>";
 
-        // Edit-Link (setzt GET edit_id)
-        $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $id, ENT_QUOTES, 'UTF-8');
-        echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
+            // Edit-Link (setzt GET edit_id)
+            $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $id, ENT_QUOTES, 'UTF-8');
+            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
                 <a href='{$edit_url}' title='Bearbeiten' style='text-decoration:none;'>✏️</a>
               </td>";
 
-        // Delete-Link: führt zur PHP-Bestätigungsseite (kein JS-Popup)
-        $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete=' . $id, ENT_QUOTES, 'UTF-8');
-        echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
+            // Delete-Link: führt zur PHP-Bestätigungsseite (kein JS-Popup)
+            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete=' . $id, ENT_QUOTES, 'UTF-8');
+            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
                 <a href='{$confirm_url}' title='Löschen' style='text-decoration:none;color:#900;'>🗑️</a>
               </td>";
+        }
+        echo "</tr>";
     }
-    echo "</tr>";
-  }
 
-  echo "</table>";
+    echo "</table>";
 } else {
-  echo "<p>Keine Gruppen gefunden.</p>";
+    echo "<p>Keine Gruppen gefunden.</p>";
 }
 
 mysqli_free_result($result);
