@@ -54,6 +54,24 @@ function safe_html($s) {
 
 // POST: speichern (inline edit)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+
+    // NEU: Trainer anlegen
+    if ($_POST['action'] === 'create' && isset($_POST['trname'])) {
+        $new_trname = trim($_POST['trname']);
+        $new_gid    = isset($_POST['gruppe_id']) ? (int)$_POST['gruppe_id'] : 0;
+        if ($new_trname !== '') {
+            $safe_trname = htmlentities($new_trname, ENT_QUOTES, 'UTF-8');
+            $stmt = mysqli_prepare($conn, "INSERT INTO `{$trainer_table}` (trname, gruppe_id) VALUES (?, ?)");
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, 'si', $safe_trname, $new_gid);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+        }
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
     if ($_POST['action'] === 'save' && isset($_POST['old_trname'], $_POST['old_gid'], $_POST['trname'], $_POST['gruppe_id'])) {
         $old_trname = $_POST['old_trname'];
         $old_gid    = (int)$_POST['old_gid'];
