@@ -124,7 +124,8 @@ if (isset($_GET['new']) && $_GET['new'] == '1') {
     echo "<select name='gruppe_id' required style='padding:6px;border:1px solid #ccc;border-radius:4px;'>";
     echo "<option value=''>Bitte Gruppe wählen</option>";
     foreach ($groups as $gid => $gname) {
-        echo "<option value='".(int)$gid."'>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
+        $label = htmlspecialchars(html_entity_decode($gname, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        echo "<option value='".(int)$gid."'>".$label."</option>";
     }
     echo "</select>";
     echo "<button type='submit' style='padding:6px 10px; background:#28a745;color:#fff;border:none;border-radius:4px;'>Anlegen</button>";
@@ -215,7 +216,8 @@ echo "<select name='filter_gid'>";
 echo "<option value='0'>Alle</option>";
 foreach ($groups as $gid => $gname) {
     $sel = ($gid === $filter_gid) ? " selected" : "";
-    echo "<option value='".(int)$gid."'{$sel}>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
+    $label = htmlspecialchars(html_entity_decode($gname, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+    echo "<option value='".(int)$gid."'{$sel}>".$label."</option>";
 }
 echo "</select>";
 echo "</label>";
@@ -276,7 +278,8 @@ if ($res && mysqli_num_rows($res) > 0) {
                       <select name='gruppe_id'>";
             foreach ($groups as $ggid => $gname) {
                 $s = ($ggid === $gid) ? " selected" : "";
-                echo "<option value='".(int)$ggid."'{$s}>".htmlspecialchars($gname, ENT_QUOTES, 'UTF-8')."</option>";
+                $label = htmlspecialchars(html_entity_decode($gname, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+                echo "<option value='".(int)$ggid."'{$s}>".$label."</option>";
             }
             echo "</select></td>";
             echo "<td style='border:1px solid #ccc; padding:6px;'><button type='submit'>Speichern</button></td>";
