@@ -46,13 +46,11 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   margin-bottom: 8px;
 }
 .form-row label {
-  /* schmalere Label/Datum-Spalte */
-  width: 80px;
+  width: 100px;
 }
 .form-row input[type="date"],
 .form-row input[type="time"] {
-  /* Datum & Zeit etwas schmaler */
-  width: 110px;
+  width: 140px;
 }
 .form-row input[type="text"] {
   width: 300px;
@@ -70,15 +68,11 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   margin-left: 2px;
   vertical-align: super;
 }
-
-/* Multi-group list: keine Zeilenumbrüche, bei Überlauf horizontal scrollen */
 .multi-group-list {
   margin: 0 0 8px 0;
   padding: 0;
   list-style: none;
   margin-left: 100px;
-  white-space: nowrap;
-  overflow-x: auto;
 }
 .multi-group-list li {
   display: inline-block;
@@ -87,7 +81,6 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   padding: 2px 8px;
   margin-right: 6px;
   font-size: 0.95em;
-  white-space: nowrap; /* einzelne Items nicht umbrechen */
 }
 .multi-group-list button {
   background: #c00;
@@ -103,13 +96,6 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   font-size: 0.5em;
   margin-left: 2px;
   vertical-align: super;
-}
-
-/* Gruppe Select breiter, damit mehrere Einträge nicht umbrechen */
-#GruppeSelect, #TrainerSelect {
-  width: 420px;
-  max-width: calc(100% - 120px);
-  box-sizing: border-box;
 }
 </style>
 

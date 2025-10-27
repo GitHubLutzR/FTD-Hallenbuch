@@ -15,21 +15,29 @@ if ($result && mysqli_num_rows($result) > 0) {
   ########################
   echo "<h3>Letzte Einträge:</h3>";
 
+  // schmalere Datum-Spalte, breitere Gruppe; CSS verhindert Zeilenumbruch in Gruppe
   $columnConfig = [
-    'datum'     => ['label' => 'Datum',          'width' => '50px'],
+    'datum'     => ['label' => 'Datum',          'width' => '40px'],
     'von'       => ['label' => 'Von',            'width' => '22px'],
     'bis'       => ['label' => 'Bis',            'width' => '22px'],
-    'gruppe'    => ['label' => 'Gruppe',         'width' => '80px'],
+    'gruppe'    => ['label' => 'Gruppe',         'width' => '220px'],
     'trainer'   => ['label' => 'Trainer/-innen', 'width' => '70px'],
     'bemerkung' => ['label' => 'Bemerkung',      'width' => '200px']
   ];
 
-  echo "<table class='last-entries' style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
+  // Inline-CSS: verhindere Umbrüche in der Gruppe-Spalte, Ellipsis bei Überlauf
+  echo '<style>
+    .last-entries td.group-col { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .last-entries { border-collapse:collapse; }
+    .last-entries th, .last-entries td { padding:4px; border:1px solid #ccc; vertical-align:middle; font-size:13px; }
+  </style>';
+
+  echo "<table class='last-entries' style='table-layout: fixed; width: 100%;'>";
 
   // Tabellenkopf
   echo "<tr>";
   foreach ($columnConfig as $key => $config) {
-    echo "<th style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>{$config['label']}</th>";
+    echo "<th style='width:{$config['width']};'>{$config['label']}</th>";
   }
   echo "</tr>";
 
@@ -37,16 +45,23 @@ if ($result && mysqli_num_rows($result) > 0) {
   while ($row = mysqli_fetch_assoc($result)) {
     echo "<tr>";
     foreach ($columnConfig as $key => $config) {
-      $value = htmlspecialchars($row[$key] ?? '');
-      $value = htmlspecialchars($row[$key] ?? '');
-      $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
-      if ($key === 'bemerkung' && strlen($value) > 150) {
-        $value = substr($value, 0, 147) . '...';
-        echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+      // Rohwert holen
+      $raw = $row[$key] ?? '';
+
+      // Entities zuerst decodieren, dann sicher für HTML escapen (UTF-8)
+      $value = htmlspecialchars(html_entity_decode($raw, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+
+      // per-column style und spezielle Darstellung
+      $cellClass = ($key === 'gruppe') ? 'group-col' : '';
+      $cellStyle = "width:{$config['width']};";
+
+      if ($key === 'bemerkung' && mb_strlen($value) > 150) {
+        $short = mb_substr($value, 0, 147) . '...';
+        echo "<td class='{$cellClass}' style='{$cellStyle}'>{$short}</td>";
       } else {
         // Zeitfelder kürzen auf HH:MM
-        if (in_array($key, ['von', 'bis']) && strlen($value) >= 5) {
-          $value = substr($value, 0, 5);
+        if (in_array($key, ['von', 'bis'], true) && mb_strlen($value) >= 5) {
+          $value = mb_substr($value, 0, 5);
         }
         // Datum umwandeln in TT.MM.JJJJ
         if ($key === 'datum' && !empty($value)) {
@@ -55,7 +70,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             $value = $dateObj->format('d.m.Y');
           }
         }
-        echo "<td style='width:{$config['width']}; border: 1px solid #ccc; padding: 4px;'>$value</td>";
+        echo "<td class='{$cellClass}' style='{$cellStyle}'>{$value}</td>";
       }
     }
     echo "</tr>";
