@@ -13,7 +13,7 @@ $trainer_table = preg_replace('/[^A-Za-z0-9_]/', '', $trainer_table);
 $group_table   = preg_replace('/[^A-Za-z0-9_]/', '', $group_table);
 
 // Basis‑Ziel-URL für diese Seite (sauber, absolut relativ zum Webroot)
-$self = $base_url . 'includes/list_all_trainers.php';
+$self = $_SERVER['REQUEST_URI'];  
 
 // POST-Aktionen: create / save / delete / cancel
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         // redirect to avoid resubmit
-        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
+        header('Location: ' . $self );
         exit;
     }
 
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
+        header('Location: ' . $self );
         exit;
     }
 
@@ -67,12 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
             }
         }
-        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
+        header('Location: ' . $self );
         exit;
     }
 
     if ($action === 'cancel') {
-        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
+        header('Location: ' . $self );
         exit;
     }
 }
@@ -92,7 +92,7 @@ if (isset($_GET['confirm_delete_trname']) && isset($_GET['confirm_delete_gid']))
     $ctname = $_GET['confirm_delete_trname'];
     $cgid = (int)($_GET['confirm_delete_gid']);
     if ($ctname === '' || $cgid <= 0) {
-        header('Location: ' . $base_url . 'includes/list_all_trainers.php');
+        header('Location: ' . $self );
         exit;
     }
     $ctname_esc = htmlspecialchars($ctname, ENT_QUOTES, 'UTF-8');
@@ -226,11 +226,21 @@ if ($res && mysqli_num_rows($res) > 0) {
     echo "</tr>";
 
     while ($row = mysqli_fetch_assoc($res)) {
-        $trname = $row['trname'];
-        $gid = (int)$row['gruppe_id'];
-        $display_name = htmlspecialchars($trname, ENT_QUOTES, 'UTF-8');
+        $trname = $row['trname'] ?? '';
+        $gid = (int)($row['gruppe_id'] ?? 0);
+
+        // decode any HTML entities from DB, then escape for safe output (fixes Umlaut-Mojibake)
+        $display_name = htmlspecialchars(
+            html_entity_decode($trname, ENT_QUOTES, 'UTF-8'),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+
         // group_name aus JOIN verwenden, fallback auf $groups array falls leer
-        $display_group = (!empty($row['group_name'])) ? htmlspecialchars($row['group_name'], ENT_QUOTES, 'UTF-8') : (isset($groups[$gid]) ? htmlspecialchars($groups[$gid], ENT_QUOTES, 'UTF-8') : '–');
+        $raw_group = !empty($row['group_name']) ? $row['group_name'] : ($groups[$gid] ?? '');
+        $display_group = $raw_group !== '' 
+            ? htmlspecialchars(html_entity_decode($raw_group, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') 
+            : '–';
 
         echo "<tr>";
         if ($edit_trname !== null && $edit_trname === $trname && $edit_gid === $gid) {

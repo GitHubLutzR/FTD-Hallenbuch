@@ -129,8 +129,11 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
       } else {
           while ($row = mysqli_fetch_assoc($grresult)) {
               $id = (int) $row['id'];
-              $name = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
-              echo "<option value=\"$id\">$name</option>";
+              // decode entities from DB then escape for safe HTML output
+              $rawName = $row['name'] ?? '';
+              $decodedName = html_entity_decode($rawName, ENT_QUOTES, 'UTF-8');
+              $safeName = htmlspecialchars($decodedName, ENT_QUOTES, 'UTF-8');
+              echo "<option value=\"$id\">$safeName</option>";
           }
       }
       ?>
@@ -283,16 +286,17 @@ $group_trainers = [];
 $all_set = [];
 if ($gtr) {
     while ($r = mysqli_fetch_assoc($gtr)) {
-        $name = trim($r['trname'] ?? '');
-        $gid  = (int)($r['gruppe_id'] ?? 0);
+        // decode HTML entities from DB, trim and skip empty names
+        $raw = $r['trname'] ?? '';
+        $name = trim(html_entity_decode($raw, ENT_QUOTES, 'UTF-8'));
         if ($name === '') continue;
+        $gid  = (int)($r['gruppe_id'] ?? 0);
         $group_trainers[$gid][] = $name;
         $all_set[$name] = true;
     }
 }
 $all_trainers = array_values(array_keys($all_set));
 ?>
-
 <script>
 // GROUP_TRAINERS: { groupId: [names...] }, ALL_TRAINERS: [names...]
 const GROUP_TRAINERS = <?php echo json_encode($group_trainers, JSON_UNESCAPED_UNICODE); ?>;
