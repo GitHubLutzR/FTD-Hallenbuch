@@ -181,6 +181,23 @@ if (isset($filter_gid) && $filter_gid > 0) {
 
 $res = mysqli_query($conn, $sql);
 
+// kompaktere Zeilenhöhe / Spaltenbreiten (keine funktionalen Änderungen)
+echo '<style>
+  .slim-table { font-size:12px; border-collapse:collapse; width:100%; table-layout:fixed; }
+  .slim-table th, .slim-table td { padding:4px 6px; line-height:1.0; vertical-align:middle; border:1px solid #ccc; }
+  .slim-table td { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .slim-table td.name-col { width:50%; }
+  .slim-table td.group-col { width:30%; }
+  .slim-table td.actions-col { width:10%; text-align:center; }
+  .slim-input { padding:3px 5px; font-size:12px; }
+  .slim-table a, .slim-table button { line-height:1.0; font-size:12px; padding:2px 6px; }
+  /* make selects/inputs visually compact */
+  .slim-table input, .slim-table select, .slim-table textarea { font-size:12px; padding:4px; }
+</style>';
+
+// single table (replace any other "<table ...>" open so we do not nest tables)
+echo "<table class=\'slim-table\' style=\'table-layout:fixed; width:100%; border-collapse:collapse;\'>";
+
 // Tabelle: alle Trainer mit Gruppennamen filterbar
 echo "<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;'>";
 echo "<h3 style='margin:0;'>Liste der Trainer:</h3>";
@@ -209,7 +226,7 @@ if ($res && mysqli_num_rows($res) > 0) {
     $next_dir_name  = ($sort === 'name'  && $dir === 'asc')  ? 'desc' : 'asc';
     $next_dir_group = ($sort === 'group' && $dir === 'asc')  ? 'desc' : 'asc';
 
-    echo "<table style='table-layout:fixed; width:100%; border-collapse:collapse;'>";
+    echo '<table class="slim-table" style="table-layout:fixed; width:100%; border-collapse:collapse;">';
     echo "<tr>";
     // Name header (Link wechselt sort & dir)
     $link_name = htmlspecialchars($base_link . 'sort=name&dir=' . $next_dir_name, ENT_QUOTES, 'UTF-8');
