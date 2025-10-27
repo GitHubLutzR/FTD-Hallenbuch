@@ -168,8 +168,18 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   let Gruppen = [];
   const maxGroups = 2;
 
+  // helper: normalize (lowercase, remove punctuation, collapse spaces)
+  function normalizeName(s){
+    return (s||'').toLowerCase().replace(/[^a-z0-9äöüß\s]/g,'').replace(/\s+/g,' ').trim();
+  }
+
   function isSonstigeSelected() {
-    return Gruppen.length === 1 && Gruppen[0].name.toLowerCase() === 'sonstige';
+    return Gruppen.length === 1 && normalizeName(Gruppen[0].name) === 'sonstige';
+  }
+
+  // prüft nur den Anfang des Gruppennamens (z.B. "Kita Wingertstr." passt auch für "Kita Wingertstr. - Gruppe A")
+  function isKiTaWSelected() {
+    return Gruppen.length === 1 && normalizeName(Gruppen[0].name).startsWith('kita');
   }
 
   function updateGruppeList() {
@@ -186,7 +196,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
       document.getElementById('GruppeHint').style.display = Gruppen.length ? 'none' : 'block';
 
       // Sonstige-Feld anzeigen/verstecken
-      if (isSonstigeSelected()) {
+      if (isSonstigeSelected() || isKiTaWSelected()) {
         document.getElementById('GruppeSelect').disabled = true;
         document.getElementById('addGruppe').disabled = true;
         document.getElementById('gruppe-sonstige-row').style.display = 'flex';
@@ -194,6 +204,11 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
         document.getElementById('TrainerSelect').style.display = 'none';
         document.getElementById('addTrainer').style.display = 'none';
         document.getElementById('clearTrainer').style.display = 'none';
+        if (isSonstigeSelected() ) {
+          document.getElementById('gruppe_sonstige').value = 'sonstige';
+        } else {
+          document.getElementById('gruppe_sonstige').value = 'Kita Wingertstr.';
+        }
         document.getElementById('TrainerHidden').value = 'sonstige';
       } else {
         document.getElementById('GruppeSelect').disabled = false;

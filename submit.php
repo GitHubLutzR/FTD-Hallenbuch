@@ -100,6 +100,23 @@ if (strtolower($gruppe) === 'sonstige') {
     $trainer = $trainer_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
 }
 
+// Gruppe "KiTa" umschreiben normalizeName(Gruppen[0].name).startsWith('kita')
+  if (
+    (is_string($gruppe) && (stripos($gruppe, 'kita') !== false || stripos($gruppe, 'wingert') !== false))
+    || (is_string($raw_group_post) && (stripos($raw_group_post, 'kita') !== false || stripos($raw_group_post, 'wingert') !== false))
+    ) {
+    $trainer_sonstige = trim($trainer_sonstige);
+    if ($trainer_sonstige === '') {
+        die("❌ Fehler: Bitte Trainer/ -innen angeben, wenn 'sonstige' gewählt wurde.");
+        if ($hesk_settings['debug']) {
+        echo "<pre>Übermittelte Formulardaten:\n";
+        print_r($_POST);
+        echo "</pre>";
+    }
+    }
+    $trainer = $trainer_sonstige; // Überschreibt die Gruppenwahl mit dem Freitext
+}
+
 // Kombinierten Zeitstempel erzeugen
 $eintragZeit = strtotime("$datum $von");
 $jetzt = time();
