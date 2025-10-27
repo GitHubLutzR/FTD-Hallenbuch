@@ -23,9 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $trname = trim($_POST['trname']);
         $gid = (int)$_POST['gruppe_id'];
         if ($trname !== '' && $gid > 0) {
+            // encode special chars before saving
+            $safe_trname = htmlentities($trname, ENT_QUOTES, 'UTF-8');
             $stmt = mysqli_prepare($conn, "INSERT INTO `{$trainer_table}` (trname, gruppe_id) VALUES (?, ?)");
             if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'si', $trname, $gid);
+                mysqli_stmt_bind_param($stmt, 'si', $safe_trname, $gid);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
             }
@@ -41,9 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $trname = trim($_POST['trname']);
         $gid = (int)$_POST['gruppe_id'];
         if ($old_trname !== '' && $trname !== '' && $gid > 0) {
+            // encode special chars before saving
+            $safe_trname = htmlentities($trname, ENT_QUOTES, 'UTF-8');
             $stmt = mysqli_prepare($conn, "UPDATE `{$trainer_table}` SET trname = ?, gruppe_id = ? WHERE trname = ? AND gruppe_id = ? LIMIT 1");
             if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'sisi', $trname, $gid, $old_trname, $old_gid);
+                mysqli_stmt_bind_param($stmt, 'sisi', $safe_trname, $gid, $old_trname, $old_gid);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
             }

@@ -15,9 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'create' && isset($_POST['name'])) {
         $name = trim($_POST['name']);
         if ($name !== '') {
+            // encode special chars before saving
+            $safe_name = htmlentities($name, ENT_QUOTES, 'UTF-8');
             $stmt = mysqli_prepare($conn, "INSERT INTO `{$table}` (`name`) VALUES (?)");
             if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 's', $name);
+                mysqli_stmt_bind_param($stmt, 's', $safe_name);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
             }
@@ -45,7 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int) $_POST['id'];
         $name = trim($_POST['name']);
         if ($id > 0 && $name !== '') {
-            $safe_name = $name;
+            // encode special chars before saving
+            $safe_name = htmlentities($name, ENT_QUOTES, 'UTF-8');
             $stmt = mysqli_prepare($conn, "UPDATE `{$table}` SET `name` = ? WHERE id = ?");
             if ($stmt) {
                 mysqli_stmt_bind_param($stmt, 'si', $safe_name, $id);
