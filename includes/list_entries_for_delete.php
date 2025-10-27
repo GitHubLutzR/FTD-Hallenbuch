@@ -305,34 +305,73 @@ if ($result && mysqli_num_rows($result) > 0) {
 
     while ($row = mysqli_fetch_assoc($result)) {
         $rowId = (int)$row['id'];
-        echo "<tr>";
 
-        // checkbox cell
+        // If this row is being edited, render a single TR that contains the form
+        if ($editId === $rowId) {
+            $totalCols = 2 + count($columnConfig); // checkbox + edit + defined columns
+            // build cancel URL (remove edit_id)
+            $parts = parse_url($_SERVER['REQUEST_URI']);
+            parse_str($parts['query'] ?? '', $qs);
+            unset($qs['edit_id']);
+            $query = http_build_query($qs);
+            $cancelUrl = $parts['path'] . ($query !== '' ? '?' . $query : '');
+            $cancelUrl = htmlspecialchars($cancelUrl, ENT_QUOTES, 'UTF-8');
+
+            echo "<tr>";
+            echo "<td colspan='{$totalCols}' style='border:1px solid #ccc;padding:6px;'>";
+            echo "<form method='post' style='display:flex;gap:12px;flex-wrap:wrap;align-items:center;'>";
+            echo "<input type='hidden' name='action' value='save'>";
+            echo "<input type='hidden' name='id' value='" . $rowId . "'>";
+
+            // Render inputs for each configured column
+            foreach ($columnConfig as $key => $config) {
+                $rawVal = $row[$key] ?? '';
+                $value = htmlspecialchars(html_entity_decode($rawVal, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+                $fieldStyle = "min-width:120px; max-width:{$config['width']};";
+
+                if ($key === 'bemerkung') {
+                    echo "<div style='flex:1;min-width:200px;'><label style='display:block;font-weight:600;margin-bottom:4px;'>{$config['label']}</label>";
+                    echo "<textarea name='bemerkung' style='width:100%;height:64px;'>{$value}</textarea></div>";
+                } elseif ($key === 'datum') {
+                    echo "<div style='{$fieldStyle}'>";
+                    echo "<label style='display:block;font-weight:600;margin-bottom:4px;'>{$config['label']}</label>";
+                    echo "<input type='date' name='datum' value='" . htmlspecialchars($row['datum'] ?? '', ENT_QUOTES, 'UTF-8') . "' style='width:100%'></div>";
+                } elseif (in_array($key, ['von','bis'], true)) {
+                    echo "<div style='{$fieldStyle}'>";
+                    echo "<label style='display:block;font-weight:600;margin-bottom:4px;'>{$config['label']}</label>";
+                    echo "<input type='time' name='{$key}' value='" . htmlspecialchars(mb_substr($value,0,5), ENT_QUOTES, 'UTF-8') . "' style='width:100%'></div>";
+                } else {
+                    echo "<div style='{$fieldStyle}'>";
+                    echo "<label style='display:block;font-weight:600;margin-bottom:4px;'>{$config['label']}</label>";
+                    echo "<input type='text' name='{$key}' value='" . htmlspecialchars($rawVal, ENT_QUOTES, 'UTF-8') . "' style='width:100%'></div>";
+                }
+            }
+
+            // Actions
+            echo "<div style='display:flex;flex-direction:column;gap:6px;'>";
+            echo "<div><button type='submit' style='padding:6px 12px;'>💾 Speichern</button></div>";
+            echo "<div><a href='{$cancelUrl}' style='padding:6px 12px;border:1px solid #ccc;background:#f3f3f3;text-decoration:none;display:inline-block;'>Abbrechen</a></div>";
+            echo "</div>";
+
+            echo "</form>";
+            echo "</td>";
+            echo "</tr>";
+
+            // skip rendering the normal row cells (we already output the edit row)
+            continue;
+        }
+
+        // Normal row rendering (unchanged)
+        echo "<tr>";
         echo "<td style='border: 1px solid #ccc; text-align: center;'>
                 <input type='checkbox' name='delete_ids[]' value='" . $rowId . "'>
               </td>";
 
-        // Edit cell: either Edit button or Save/Cancel form if this row is being edited
-        if ($editId === $rowId) {
-            // inline edit form spans the edit cell + other cells for inputs
-            echo "<td style='border: 1px solid #ccc; text-align:center;' colspan='1'>";
-            echo "<form method='post' style='margin:0; display:inline-block;'>";
-            echo "<input type='hidden' name='action' value='save'>";
-            echo "<input type='hidden' name='id' value='" . $rowId . "'>";
-            echo "<button type='submit' style='padding:4px 8px;margin-right:6px;'>💾 Speichern</button>";
-            // Cancel: link back to page without edit_id
-            $cancelUrl = htmlspecialchars(preg_replace('/([&?])edit_id=[^&]*/', '', $_SERVER['REQUEST_URI']) , ENT_QUOTES, 'UTF-8');
-            $cancelUrl = rtrim($cancelUrl, '?&');
-            echo "<a href='{$cancelUrl}' style='padding:4px 8px;border:1px solid #ccc;background:#f3f3f3;text-decoration:none;'>Abbrechen</a>";
-            echo "</form>";
-            echo "</td>";
-        } else {
-            // normal Edit link
-            $editUrl = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $rowId . '&limit=' . urlencode($selectedLimitRaw) . ( $selectedDate ? '&filter_date=' . urlencode($selectedDate) : '' ), ENT_QUOTES, 'UTF-8');
-            echo "<td style='border: 1px solid #ccc; text-align:center;'>
-                    <a href=\"{$editUrl}\" title='Bearbeiten' style='display:inline-block;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;text-decoration:none;'>✏️ Edit</a>
-                  </td>";
-        }
+        // Edit button cell
+        $editUrl = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $rowId . '&limit=' . urlencode($selectedLimitRaw) . ( $selectedDate ? '&filter_date=' . urlencode($selectedDate) : '' ), ENT_QUOTES, 'UTF-8');
+        echo "<td style='border: 1px solid #ccc; text-align:center;'>
+                <a href=\"{$editUrl}\" title='Bearbeiten' style='display:inline-block;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;text-decoration:none;'>✏️ Edit</a>
+              </td>";
 
         // For each column: either input fields (if editing this row) or normal display
         foreach ($columnConfig as $key => $config) {
@@ -348,18 +387,18 @@ if ($result && mysqli_num_rows($result) > 0) {
                 // render inputs matching the column
                 if ($key === 'bemerkung') {
                     echo "<td style='{$cellStyle}'>
-                            <textarea name='bemerkung' formmethod='post' form='dummy' style='width:100%;height:48px;'>" . $value . "</textarea>
+                            <textarea name='bemerkung' form='{$formId}' style='width:100%;height:48px;'>" . $value . "</textarea>
                           </td>";
                 } elseif (in_array($key, ['von','bis'], true)) {
-                    echo "<td style='{$cellStyle}'><input type='time' name='{$key}' value='" . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                    echo "<td style='{$cellStyle}'><input form='{$formId}' type='time' name='{$key}' value='" . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
                 } elseif ($key === 'datum') {
                     // date input expects YYYY-MM-DD -> keep DB format
                     $dateValue = $value;
                     // if value displayed as d.m.Y, try to convert back? In DB it's Y-m-d so use raw
-                    echo "<td style='{$cellStyle}'><input type='date' name='datum' value='" . htmlspecialchars($row['datum'] ?? '', ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                    echo "<td style='{$cellStyle}'><input form='{$formId}' type='date' name='datum' value='" . htmlspecialchars($row['datum'] ?? '', ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
                 } else {
                     // text inputs for gruppe, trainer, etc.
-                    echo "<td style='{$cellStyle}'><input type='text' name='{$key}' value='" . htmlspecialchars($rawVal, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
+                    echo "<td style='{$cellStyle}'><input form='{$formId}' type='text' name='{$key}' value='" . htmlspecialchars($rawVal, ENT_QUOTES, 'UTF-8') . "' style='width:100%;'></td>";
                 }
             } else {
                 // normal display (shorten bemerkung if long)
