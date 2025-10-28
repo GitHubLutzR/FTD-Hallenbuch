@@ -1,6 +1,22 @@
 <?php
+// Prevent template/header output and start buffering
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
+}
+ob_start();
+
+// Konfiguration + "public" include (keine HTML-Ausgaben)
 require_once(__DIR__ . '/../config.php');
-require_once(__DIR__ . '/../include.php');
+require_once(__DIR__ . '/../include_public.php');
+
+// DEBUG: Log starten (temporär, entfernen nach Diagnose)
+error_log('[export] start: ' . date('c'));
+error_log('[export] PHP SAPI: ' . php_sapi_name() . ' ; PHP version: ' . phpversion());
+error_log('[export] _GET: ' . json_encode($_GET));
+error_log('[export] fpdf exists in includes? ' . (file_exists(__DIR__ . '/fpdf.php') ? 'yes' : 'no'));
+error_log('[export] fpdf exists in project fpdf186? ' . (file_exists(__DIR__ . '/../fpdf186/fpdf.php') ? 'yes' : 'no'));
+error_log('[export] vendor/autoload? ' . (file_exists(__DIR__ . '/../vendor/autoload.php') ? 'yes' : 'no'));
+error_log('[export] class FPDF before include? ' . (class_exists('FPDF') ? 'yes' : 'no'));
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
