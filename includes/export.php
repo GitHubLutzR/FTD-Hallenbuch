@@ -1,6 +1,11 @@
 <?php
-require 'include.php';
-require 'fpdf.php';
+require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../include.php');
+
+$conn = get_db_connection();
+
+global $hesk_settings;
+$table = $hesk_settings['db_hb_pfix'] . 'gruppen';
 
 $filter = $_GET['filter'] ?? 'woche';
 $pdf = new FPDF('P', 'mm', 'A4');
