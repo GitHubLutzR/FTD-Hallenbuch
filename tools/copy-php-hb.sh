@@ -53,6 +53,10 @@ for dir in "${dirs[@]}"; do
     #echo "File is: $(ls "$TARGET_ROOT/$dir"/*.php.txt | grep -v "config.php")_:" #> /dev/null
   fi
 done
+if ls "$SOURCE_ROOT/fpdf186" >/dev/null 2>&1; then
+  cp -r $SOURCE_ROOT/fpdf186 $TARGET_ROOT
+fi
+
 chown -R $TARGET_USER $TARGET_ROOT
 
 exit 0

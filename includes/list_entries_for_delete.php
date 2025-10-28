@@ -430,6 +430,29 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<p>Keine Einträge gefunden.</p>";
 }
 
+// nach dem Filter-Formular (z.B. direkt nach echo "</form>"; )
+$qs = $_GET;
+unset($qs['edit_id'], $qs['limit']); // limit entfernen, damit export alle Treffer liefert
+$export_url = './export.php' . (!empty($qs) ? ('?' . http_build_query($qs)) : '');
+echo "<div style='margin-bottom:10px;'><a href='" . htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8') . "' style='padding:6px 10px;background:#2b7cff;color:#fff;text-decoration:none;border-radius:4px;'>PDF exportieren (aktuelle Filter)</a></div>";
+
+// --- NEU: Export-Button direkt unter den Filtern (nur bei Wochen- oder Monatsfilter) ---
+$activeFilter = '';
+if (array_key_exists('filter_week', $_GET) && $_GET['filter_week'] !== '') {
+    $activeFilter = 'week';
+} elseif (array_key_exists('filter_month', $_GET) && $_GET['filter_month'] !== '') {
+    $activeFilter = 'month';
+} elseif (array_key_exists('filter_date', $_GET) && $_GET['filter_date'] !== '') {
+    $activeFilter = 'date';
+}
+
+if ($activeFilter === 'week' || $activeFilter === 'month') {
+    $qs = $_GET;
+    unset($qs['edit_id'], $qs['limit']); // nicht forwarden
+    $export_url = '/hallenbuch/includes/export.php' . (!empty($qs) ? ('?' . http_build_query($qs)) : '');
+    echo "<div style='margin:10px 0 14px;'><a href='" . htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8') . "' style='padding:6px 10px;background:#2b7cff;color:#fff;text-decoration:none;border-radius:4px;'>PDF exportieren (aktuelle Filter)</a></div>";
+}
+
 mysqli_close($conn);
 require_once(__DIR__ . '/footer.php');
 ?>
