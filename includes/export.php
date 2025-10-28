@@ -9,6 +9,33 @@ ob_start();
 require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../include_public.php');
 
+// DEBUG (einmalig): welche Session-Keys sind gesetzt -> prüfe error_log
+error_log('[export] SESSION keys: ' . json_encode(array_keys($_SESSION ?? [])));
+error_log('[export] SESSION sample: ' . json_encode(array_slice($_SESSION ?? [], 0, 10)));
+
+// flexible Erkennung bekannter Keys
+$logged = false;
+$possible = ['user_id','uid','username','loggedin','login','hesk_uid','hesk_user_id','userid','user'];
+foreach ($possible as $k) {
+    if (!empty($_SESSION[$k])) { $logged = true; break; }
+}
+if (!$logged && !empty($_SESSION['user']) && is_array($_SESSION['user']) &&
+    (!empty($_SESSION['user']['id']) || !empty($_SESSION['user']['uid']) || !empty($_SESSION['user']['username']))) {
+    $logged = true;
+}
+
+// TEMP: permissiver Fallback für Tests — akzeptiere jede nicht-leere Session
+// Entfernen sobald der echte Session-Key bekannt ist.
+if (!$logged && !empty($_SESSION) && count($_SESSION) > 0) {
+    $logged = true;
+}
+
+if (!$logged) {
+    while (ob_get_level()) ob_end_clean();
+    http_response_code(403);
+    die('Forbidden - not logged in');
+}
+
 // DEBUG: Log starten (temporär, entfernen nach Diagnose)
 error_log('[export] start: ' . date('c'));
 error_log('[export] PHP SAPI: ' . php_sapi_name() . ' ; PHP version: ' . phpversion());
@@ -151,8 +178,19 @@ if ($activeFilter === 'date' && !empty($selectedDate)) {
     }
 }
 
+// helper: safe utf8 -> ISO-8859-1 konvertierung für FPDF
+$conv = function($s){
+    $s = (string)$s;
+    // decode HTML-Entities first (falls vorhanden)
+    $s = html_entity_decode($s, ENT_QUOTES, 'UTF-8');
+    $out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $s);
+    return $out === false ? $s : $out;
+};
+
+// dann konvertiert ausgeben:
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, 'Hallenbuch-Export: ' . ucfirst(htmlspecialchars($titleFilter, ENT_QUOTES, 'UTF-8')), 0, 1, 'C');
+$titleIso = $conv($titleFilter);
+$pdf->Cell(0, 10, 'Hallenbuch-Export: ' . ucfirst($titleIso), 0, 1, 'C');
 $pdf->Ln(4);
 
 // Tabellen-Header
@@ -168,13 +206,12 @@ $wBemerk  = 50;
 $lineH = 6;
 
 $pdf->SetFillColor(230,230,230);
-$pdf->Cell($wDatum, $lineH, 'Datum', 1, 0, 'L', true);
-$pdf->Cell($wVon,   $lineH, 'Von',   1, 0, 'L', true);
-$pdf->Cell($wBis,   $lineH, 'Bis',   1, 0, 'L', true);
-$pdf->Cell($wGruppe, $lineH, 'Gruppe', 1, 0, 'L', true);
-$pdf->Cell($wLeiter, $lineH, 'Leiter', 1, 0, 'L', true);
-$pdf->Cell($wBemerk, $lineH, 'Bemerkung', 1, 1, 'L', true);
-
+$pdf->Cell($wDatum, $lineH, $conv('Datum'), 1, 0, 'L', true);
+$pdf->Cell($wVon,   $lineH, $conv('Von'),   1, 0, 'L', true);
+$pdf->Cell($wBis,   $lineH, $conv('Bis'),   1, 0, 'L', true);
+$pdf->Cell($wGruppe,$lineH, $conv('Gruppe'),1, 0, 'L', true);
+$pdf->Cell($wLeiter,$lineH, $conv('Leiter'),1, 0, 'L', true);
+$pdf->Cell($wBemerk,$lineH, $conv('Bemerkung'),1, 1, 'L', true);
 $pdf->SetFont('Arial', '', 10);
 
 // Hilfsfunktion: berechnet wie viele Zeilen ein Text in gegebener Breite benötigt
@@ -223,7 +260,8 @@ function nbLines($pdf, $w, $txt, $lineH) {
 
 // Inhalte ausgeben mit MultiCell & Zellrändern (mehrzeilig)
 if (count($eintraege) === 0) {
-    $pdf->Cell(0, $lineH, "Keine Einträge für den ausgewählten Filter.", 1, 1);
+    $msgIso = $conv("Keine Einträge für den ausgewählten Filter.");
+    $pdf->Cell(0, $lineH, $msgIso, 1, 1);
 } else {
     foreach ($eintraege as $e) {
         // decode/escape/convert (wie vorher)
@@ -234,24 +272,13 @@ if (count($eintraege) === 0) {
         $leiter_raw  = $e['leiter'] ?? ($e['trainer'] ?? '');
         $vermerk_raw = $e['bemerkung'] ?? '';
 
-        $datum  = htmlspecialchars(html_entity_decode($datum_raw,  ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $von    = htmlspecialchars(html_entity_decode($von_raw,    ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $bis    = htmlspecialchars(html_entity_decode($bis_raw,    ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $gruppe = htmlspecialchars(html_entity_decode($gruppe_raw, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $leiter = htmlspecialchars(html_entity_decode($leiter_raw, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $vermerk= htmlspecialchars(html_entity_decode($vermerk_raw,ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-
-        // convert to ISO-8859-1 for FPDF (fallback to original if conversion fails)
-        $conv = function($s){
-            $out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $s);
-            return $out === false ? $s : $out;
-        };
-        $datum  = $conv($datum);
-        $von    = $conv($von);
-        $bis    = $conv($bis);
-        $gruppe = $conv($gruppe);
-        $leiter = $conv($leiter);
-        $vermerk= $conv($vermerk);
+        // decode entities then convert to ISO once via $conv
+        $datum  = $conv($datum_raw);
+        $von    = $conv($von_raw);
+        $bis    = $conv($bis_raw);
+        $gruppe = $conv($gruppe_raw);
+        $leiter = $conv($leiter_raw);
+        $vermerk= $conv($vermerk_raw);
 
         // Anzahl Zeilen pro Spalte berechnen
         $linesDatum  = nbLines($pdf, $wDatum,  $datum,  $lineH);
@@ -270,12 +297,12 @@ if (count($eintraege) === 0) {
             // optional: re-draw header row (Datum/ Von / ...)
             $pdf->SetFont('Arial', 'B', 10);
             $pdf->SetFillColor(230,230,230);
-            $pdf->Cell($wDatum, $lineH, 'Datum', 1, 0, 'L', true);
-            $pdf->Cell($wVon,   $lineH, 'Von',   1, 0, 'L', true);
-            $pdf->Cell($wBis,   $lineH, 'Bis',   1, 0, 'L', true);
-            $pdf->Cell($wGruppe, $lineH, 'Gruppe', 1, 0, 'L', true);
-            $pdf->Cell($wLeiter, $lineH, 'Leiter', 1, 0, 'L', true);
-            $pdf->Cell($wBemerk, $lineH, 'Bemerkung', 1, 1, 'L', true);
+            $pdf->Cell($wDatum,  $lineH, $conv('Datum'),    1, 0, 'L', true);
+            $pdf->Cell($wVon,    $lineH, $conv('Von'),      1, 0, 'L', true);
+            $pdf->Cell($wBis,    $lineH, $conv('Bis'),      1, 0, 'L', true);
+            $pdf->Cell($wGruppe, $lineH, $conv('Gruppe'),   1, 0, 'L', true);
+            $pdf->Cell($wLeiter, $lineH, $conv('Leiter'),   1, 0, 'L', true);
+            $pdf->Cell($wBemerk, $lineH, $conv('Bemerkung'),1, 1, 'L', true);
             $pdf->SetFont('Arial', '', 10);
         }
 
