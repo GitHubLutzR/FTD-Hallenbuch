@@ -53,9 +53,20 @@ if (array_key_exists('filter_date', $_GET) && $_GET['filter_date'] !== '') {
 // Baue SQL entsprechend dem aktiven Filter (kein LIMIT – exportiere alle Treffer)
 $dateCondition = '';
 if ($activeFilter === 'month') {
-    $m = intval($selectedMonth);
-    $y = date('Y');
-    $dateCondition = "WHERE MONTH(datum) = {$m} AND YEAR(datum) = {$y}";
+    // akzeptiere "YYYY-MM" oder "MM"
+    if (preg_match('/^(\d{4})-(\d{1,2})$/', $selectedMonth, $mm)) {
+        $y = (int)$mm[1];
+        $m = (int)$mm[2];
+    } else {
+        $m = intval($selectedMonth);
+        $y = date('Y');
+    }
+    if ($m >= 1 && $m <= 12) {
+        $dateCondition = "WHERE MONTH(datum) = {$m} AND YEAR(datum) = {$y}";
+    } else {
+        // ungültiger Monatswert -> keine Trefferbedingung (oder optional: Abbruch)
+        $dateCondition = '';
+    }
 } elseif ($activeFilter === 'week') {
     $w = intval($selectedWeek);
     $y = date('Y');
@@ -71,15 +82,28 @@ if ($activeFilter === 'month') {
 // Query
 $sql = "SELECT * FROM `{$table}` " . ($dateCondition ? $dateCondition . ' ' : '') . "ORDER BY datum, von";
 $res = mysqli_query($conn, $sql);
-if (!$res) {
-    // clear buffers before sending error text
+if ($res === false) {
+    // DB-Fehler diagnostizieren, Buffer sauber machen und Abbruch
     while (ob_get_level()) ob_end_clean();
-    die('DB query failed: ' . mysqli_error($conn));
+    die('DB query failed: ' . mysqli_error($conn) . ' -- SQL: ' . htmlspecialchars($sql, ENT_QUOTES, 'UTF-8'));
 }
 
 $eintraege = [];
 while ($row = mysqli_fetch_assoc($res)) {
     $eintraege[] = $row;
+}
+
+// Sicherheit: stelle sicher, dass $eintraege ein Array ist (vermeidet foreach-Warnung)
+if (!is_array($eintraege)) {
+    // Falls mysqli_fetch_assoc fehlschlug oder eine unerwartete Rückgabe kam, leeren wir die Liste
+    $eintraege = [];
+}
+
+// Sicherstellen, dass $eintraege iterierbar ist (vermeidet "foreach() argument must be of type array|object, bool given")
+if (!is_array($eintraege)) {
+    // Debug-Info in error_log schreiben, falls es weiter auftritt
+    error_log('[export.php] $eintraege ist vom Typ: ' . gettype($eintraege) . ' -- $_GET: ' . var_export($_GET, true));
+    $eintraege = [];
 }
 
 // PDF: Querformat (L)
@@ -137,36 +161,61 @@ $pdf->Cell($wBemerk, $lineH, 'Bemerkung', 1, 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 10);
 
-// Hilfsfunktion: Text so kürzen, dass er in Breite passt (mit "...")
-function fitTextToWidth($pdf, $text, $w) {
-    $txt = trim((string)$text);
-    $avail = $w - 2; // kleiner Innenabstand
-    if ($avail <= 0) return '';
-    // schnelle check
-    if ($pdf->GetStringWidth($txt) <= $avail) return $txt;
-    $ell = '...';
-    $len = mb_strlen($txt);
-    // reduziert in Schritten
-    while ($len > 0) {
-        $candidate = mb_substr($txt, 0, $len) . $ell;
-        if ($pdf->GetStringWidth($candidate) <= $avail) return $candidate;
-        $len -= 1;
+// Hilfsfunktion: berechnet wie viele Zeilen ein Text in gegebener Breite benötigt
+function nbLines($pdf, $w, $txt, $lineH) {
+    $txt = trim((string)$txt);
+    if ($txt === '') return 1;
+    // split in words (inkl. Trennung), fallback wenn preg_split fehlschlägt
+    $words = @preg_split('/(\s+)/u', $txt, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if ($words === false || !is_array($words)) {
+        // try a simpler split as fallback
+        $words = preg_split('/(\s+)/', $txt, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($words === false || !is_array($words)) {
+            $words = array($txt);
+        }
     }
-    return $ell;
+    $lines = 0;
+    $line = '';
+    foreach ($words as $part) {
+        $test = ($line === '') ? $part : $line . $part;
+        if ($pdf->GetStringWidth($test) <= $w - 2) {
+            $line = $test;
+        } else {
+            if ($line === '') {
+                // Wort zu lang -> breche das Wort
+                $chunk = '';
+                $len = mb_strlen($part);
+                for ($i = 0; $i < $len; $i++) {
+                    $ch = mb_substr($part, $i, 1);
+                    if ($pdf->GetStringWidth($chunk . $ch) <= $w - 2) {
+                        $chunk .= $ch;
+                    } else {
+                        $lines++;
+                        $chunk = $ch;
+                    }
+                }
+                if ($chunk !== '') $line = $chunk;
+            } else {
+                $lines++;
+                $line = $part;
+            }
+        }
+    }
+    if ($line !== '') $lines++;
+    return max(1, $lines);
 }
 
-// Inhalte ausgeben
+// Inhalte ausgeben mit MultiCell & Zellrändern (mehrzeilig)
 if (count($eintraege) === 0) {
     $pdf->Cell(0, $lineH, "Keine Einträge für den ausgewählten Filter.", 1, 1);
 } else {
     foreach ($eintraege as $e) {
-        // decode any HTML entities, escape, then convert to ISO-8859-1 for FPDF
-        $datum_raw = $e['datum'] ?? '';
-        $von_raw   = $e['von'] ?? '';
-        $bis_raw   = $e['bis'] ?? '';
-        $gruppe_raw= $e['gruppe'] ?? '';
-        $leiter_raw= $e['leiter'] ?? ($e['trainer'] ?? '');
-        // DB-Feld heißt "bemerkung"
+        // decode/escape/convert (wie vorher)
+        $datum_raw   = $e['datum'] ?? '';
+        $von_raw     = $e['von'] ?? '';
+        $bis_raw     = $e['bis'] ?? '';
+        $gruppe_raw  = $e['gruppe'] ?? '';
+        $leiter_raw  = $e['leiter'] ?? ($e['trainer'] ?? '');
         $vermerk_raw = $e['bemerkung'] ?? '';
 
         $datum  = htmlspecialchars(html_entity_decode($datum_raw,  ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
@@ -188,14 +237,74 @@ if (count($eintraege) === 0) {
         $leiter = $conv($leiter);
         $vermerk= $conv($vermerk);
 
+        // Anzahl Zeilen pro Spalte berechnen
+        $linesDatum  = nbLines($pdf, $wDatum,  $datum,  $lineH);
+        $linesVon    = nbLines($pdf, $wVon,    $von,    $lineH);
+        $linesBis    = nbLines($pdf, $wBis,    $bis,    $lineH);
+        $linesGruppe = nbLines($pdf, $wGruppe, $gruppe, $lineH);
+        $linesLeiter = nbLines($pdf, $wLeiter, $leiter, $lineH);
+        $linesBemerk = nbLines($pdf, $wBemerk, $vermerk,$lineH);
 
-         $pdf->Cell($wDatum, $lineH, fitTextToWidth($pdf, $datum, $wDatum), 1, 0);
-         $pdf->Cell($wVon,   $lineH, fitTextToWidth($pdf, $von, $wVon), 1, 0);
-         $pdf->Cell($wBis,   $lineH, fitTextToWidth($pdf, $bis, $wBis), 1, 0);
-         $pdf->Cell($wGruppe,$lineH, fitTextToWidth($pdf, $gruppe, $wGruppe), 1, 0);
-         $pdf->Cell($wLeiter,$lineH, fitTextToWidth($pdf, $leiter, $wLeiter), 1, 0);
-         $pdf->Cell($wBemerk,$lineH, fitTextToWidth($pdf, $vermerk, $wBemerk), 1, 1);
-     }
+        $nb = max($linesDatum, $linesVon, $linesBis, $linesGruppe, $linesLeiter, $linesBemerk);
+        $h = $nb * $lineH;
+
+        // Seitenumbruch prüfen: wenn nicht genug Platz, neue Seite mit Header
+        if ($pdf->GetY() + $h + 20 > $pdf->GetPageHeight()) {
+            $pdf->AddPage();
+            // optional: re-draw header row (Datum/ Von / ...)
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetFillColor(230,230,230);
+            $pdf->Cell($wDatum, $lineH, 'Datum', 1, 0, 'L', true);
+            $pdf->Cell($wVon,   $lineH, 'Von',   1, 0, 'L', true);
+            $pdf->Cell($wBis,   $lineH, 'Bis',   1, 0, 'L', true);
+            $pdf->Cell($wGruppe, $lineH, 'Gruppe', 1, 0, 'L', true);
+            $pdf->Cell($wLeiter, $lineH, 'Leiter', 1, 0, 'L', true);
+            $pdf->Cell($wBemerk, $lineH, 'Bemerkung', 1, 1, 'L', true);
+            $pdf->SetFont('Arial', '', 10);
+        }
+
+        // Startposition merken
+        $x = $pdf->GetX();
+        $y = $pdf->GetY();
+
+        // Datum
+        $pdf->Rect($x, $y, $wDatum, $h);
+        $pdf->SetXY($x + 1, $y + 1);
+        $pdf->MultiCell($wDatum - 2, $lineH, $datum, 0, 'L');
+        $pdf->SetXY($x + $wDatum, $y);
+
+        // Von
+        $pdf->Rect($x + $wDatum, $y, $wVon, $h);
+        $pdf->SetXY($x + $wDatum + 1, $y + 1);
+        $pdf->MultiCell($wVon - 2, $lineH, $von, 0, 'L');
+        $pdf->SetXY($x + $wDatum + $wVon, $y);
+
+        // Bis
+        $pdf->Rect($x + $wDatum + $wVon, $y, $wBis, $h);
+        $pdf->SetXY($x + $wDatum + $wVon + 1, $y + 1);
+        $pdf->MultiCell($wBis - 2, $lineH, $bis, 0, 'L');
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis, $y);
+
+        // Gruppe
+        $pdf->Rect($x + $wDatum + $wVon + $wBis, $y, $wGruppe, $h);
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis + 1, $y + 1);
+        $pdf->MultiCell($wGruppe - 2, $lineH, $gruppe, 0, 'L');
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis + $wGruppe, $y);
+
+        // Leiter
+        $pdf->Rect($x + $wDatum + $wVon + $wBis + $wGruppe, $y, $wLeiter, $h);
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis + $wGruppe + 1, $y + 1);
+        $pdf->MultiCell($wLeiter - 2, $lineH, $leiter, 0, 'L');
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis + $wGruppe + $wLeiter, $y);
+
+        // Bemerkung
+        $pdf->Rect($x + $wDatum + $wVon + $wBis + $wGruppe + $wLeiter, $y, $wBemerk, $h);
+        $pdf->SetXY($x + $wDatum + $wVon + $wBis + $wGruppe + $wLeiter + 1, $y + 1);
+        $pdf->MultiCell($wBemerk - 2, $lineH, $vermerk, 0, 'L');
+
+        // neue Zeile
+        $pdf->SetXY($x, $y + $h);
+    }
 }
 
 // ------------------------------------
