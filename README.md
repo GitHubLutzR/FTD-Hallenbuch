@@ -1,48 +1,58 @@
-# FTD-Hallenbuch
+# FTD‑Hallenbuch
 
-Dieses Repository enthält das Hallenbuch-System der Freien Turner Dörnigheim 06 e.V.  
-**Hinweis:** Die Dateiendungen `.php.txt` dienen nur dem Upload zu [https://copilot.microsoft.com/](https://copilot.microsoft.com/).  
-**Vor dem Einsatz auf dem Webserver müssen alle `.php.txt`-Dateien in `.php` umbenannt werden!**
+Dieses Repository enthält das Hallenbuch‑System der Freien Turner Dörnigheim 06 e.V.
 
-## Installation
+Wichtiger Hinweis
+- Die vorherige Anweisung, Dateien umbenennen zu müssen, ist veraltet. Die Dateien liegen jetzt direkt als `.php` vor — kein Umbenennen mehr notwendig.
+- Die Anwendung bietet inzwischen auch öffentliche Listen (ohne Login). Admin‑Funktionen benötigen weiterhin eine Authentifizierung. Die Benutzerverwaltung wird ist HESK integriert.
 
-1. **Repository herunterladen**  
-   Lade das Repository herunter und entpacke es auf deinem Webserver.
+## Installation (Kurzfassung)
 
-2. **Dateien umbenennen**  
-   Benenne alle Dateien mit der Endung `.php.txt` in `.php` um.  
-   Beispiel:  
-   `login.php.txt` → `login.php`
+1. Repository auf den Webserver kopieren
+   - In das Web‑Root oder einen geeigneten Unterordner deployen (z. B. `/var/www/html/hallenbuch` oder `/opt/lampp/htdocs/hallenbuch`).
 
-3. **Konfiguration**  
-   Passe die Datei `config.php` an deine Umgebung an.  
-   Die Zugangsdaten zur Datenbank werden aus `/srv/hesk_settings.inc.php` geladen.
+2. PHP / Server Voraussetzungen
+   - PHP 7.4+ / 8.x empfohlen (iconsv, mysqli verfügbar).
+   - Webserver (Apache / Nginx) mit PHP‑FPM oder mod_php.
 
-4. **Datenbank einrichten**  
-   Importiere die SQL-Dateien (`hallenbuch.sql`, `gruppen.sql`, `users.sql`, `hb_user.sql`) in deine MySQL/MariaDB-Datenbank.
+3. Konfiguration
+   - Prüfe und bearbeite `config.php` entsprechend deiner Umgebung (DB‑Zugang, Basispfad).
+   - Standardmäßig werden einige Einstellungen aus `/srv/hesk_settings.inc.php` geladen — passe das an, falls nicht vorhanden.
 
-5. **Berechtigungen setzen**  
-   Stelle sicher, dass der Webserver Schreibrechte auf benötigte Verzeichnisse hat (z.B. für Datei-Uploads oder temporäre Dateien).
+4. Datenbank
+   - Importiere die SQL‑Skripte in deine MySQL/MariaDB‑Datenbank:
+     - `hallenbuch.sql`
+     - `gruppen.sql`
+     - `users.sql`
+     - `hb_user.sql`
+   - Stelle in `config.php` sicher, dass das Präfix und die Tabellennamen stimmen.
 
-## Verzeichnisstruktur
+5. FPDF (PDF‑Export)
+   - Für PDF‑Export wird FPDF verwendet. Das Projekt enthält `fpdf186/` — prüfe, dass `includes/export.php` darauf zugreifen kann.
+   - Falls du Composer nutzt, kann statt FPDF ein Composer‑Package verwendet werden; Standard ist jedoch die im Projekt enthaltene `fpdf186`.
 
-- `*.php.txt` – PHP-Quellcode (vor dem Einsatz umbenennen!)
-- `admin/` – Admin-Funktionen und Benutzerverwaltung
-- `includes/` – Wiederverwendbare Komponenten und Hilfsfunktionen
-- `*.sql` – SQL-Skripte zur Datenbankstruktur
+6. Dateirechte
+   - Stelle sicher, dass der Webserver Lesezugriff auf die Projektdateien hat.
+   - Falls temporäre Dateien oder Uploads erforderlich sind, setze Schreibrechte nur auf die benötigten Verzeichnisse.
 
-## Wichtige Hinweise
+## Nutzung
 
-- **Login:** Das Admin-Login erfolgt über `login.php`.
-- **Passwort-Hashes:** Neue Passworthashes können mit `includes/generate_passwd.php` erzeugt werden.
-- **Sicherheit:** Die Zugangsdaten und Passwörter werden sicher gehasht gespeichert.
-- **Export:** Einträge können als PDF exportiert werden (`export.php`).
+- Öffentliche Ansichten:
+  - Listen für Gruppen, Trainer und Einträge sind auch ohne Login sichtbar (je nach Installation / Konfiguration).
+- Admin / Login:
+  - Admin‑Funktionen (Anlegen/Ändern/Löschen, Export für Admins) erfordern Login über `login.php`.
+- Export:
+  - PDF‑Export ist über die Listen erreichbar; Export respektiert die gesetzten Filter (Woche/Monat/Datum).
+
+## Entwicklung / Deploy‑Hinweise
+
+- Git: Änderungen über Git verwalten; das Repo enthält das Deployment‑Script der Verteilung.
+- Lokaler Test: LAMPP / XAMPP funktioniert zum Testen (Pfad‑Unterschiede beachten).
+- Fehlerdiagnose: PHP/Apache‑Error‑Logs nutzen (`/var/log/apache2/error.log` bzw. `/opt/lampp/logs/error_log`).
 
 ## Support
 
 Bei Fragen oder Problemen:  
-E-Mail: [it@freieturner.com](mailto:it@freieturner.com)
-
----
+E‑Mail: it@freieturner.com
 
 © FTD Dörnigheim 06 e.V.
