@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: hesk-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ********
+      MYSQL_DATABASE: hesk
+      MYSQL_USER: heskuser
+      MYSQL_PASSWORD: ********
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - hesknet  # <--- HIER hinzufügen!
+
+  hesk:
+    image: ghcr.io/luketainton/hesk:latest
+#    user: www-data
+    container_name: hesk-app
+    restart: always
+    environment:
+      DB_HOST: hesk-db
+      DB_NAME: hesk
+      DB_USER: heskuser
+      DB_PASS: ********
+    volumes:
+#     - ./hesk-api:/srv/api
+      - ./hallenbuch:/srv/hallenbuch
+      - ./de:/srv/language/de
+      - ./hesk_settings.inc.php:/srv/hesk_settings.inc.php
+      - ./index.php:/srv/index.php:ro
+      - ./ftd-theme:/srv/theme/ftd-theme
+      -  hesk_nginx_conf.d:/etc/nginx/conf.d
+    command: ["/bin/sh", "-c", "rm -rf /srv/install && chown -R www-data: /srv/theme/ftd-theme && apache2-foreground"]
+    #command: /bin/sh -c "rm -rf /srv/install && apache2-foreground && chown -R www-data: /srv/theme/ftd-theme"
+    depends_on:
+      - mysql
+    networks:
+      - hesknet
+
+  nginx:
+    image: nginx:latest
+    container_name: hesk-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - hesk_nginx_conf.d:/etc/nginx/conf.d
+      - hesk_nginx_certs:/etc/nginx/certs:ro
+    depends_on:
+      - hesk
+    networks:
+      - hesknet
+
+volumes:
+  db_data:
+  hesk_nginx_conf.d:
+  hesk_nginx_certs:
+ 
+networks:
+  hesknet:
+    driver: bridge
+        
