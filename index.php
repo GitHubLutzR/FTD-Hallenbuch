@@ -83,7 +83,8 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   font-size: 0.95em;
 }
 .multi-group-list button {
-  background: #c00;
+  background: #888;
+  /*background: #c00;*/
   color: #fff;
   border: none;
   border-radius: 2px;
@@ -156,7 +157,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
   </div>
 
   <ul class="multi-group-list" id="GruppeList"></ul>
-  <div id="GruppeHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
+  <div id="GruppeHint" style="margin-left:100px; color:#F00; font-size:0.95em;">Bitte mindestens eine Gruppe auswählen und auf ➕ Hinzufügen klicken.</div>
 
   <!-- Hidden-Felder: gruppe (Namen, für submit.php) und gruppe_ids (IDs, für JS/AJAX intern) -->
   <input type="hidden" name="gruppe" id="GruppeHidden">         <!-- z.B. "GrA/GrB" -->
@@ -289,7 +290,7 @@ $trtable = $hesk_settings['db_hb_pfix'] . 'trainer';
     <span class="smal-txt">&nbsp;&nbsp;&nbsp; max. 4 Trainer/-innen</span>
   </div>
   <ul class="multi-group-list" id="TrainerList"></ul>
-  <div id="TrainerHint" style="margin-left:100px; color:#888; font-size:0.95em;">Bitte mindestens einer Trainer/-innen auswählen und auf ➕ Hinzufügen klicken.</div>
+  <div id="TrainerHint" style="margin-left:100px; color:#F00; font-size:0.95em;">Bitte mindestens einer Trainer/-innen auswählen und auf ➕ Hinzufügen klicken.</div>
   <BR><BR> <input type="hidden" name="trainer" id="TrainerHidden">
 
   <?php
