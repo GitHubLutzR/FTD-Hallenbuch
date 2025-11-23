@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    /*
     if ($action === 'delete' && isset($_POST['id'])) {
         $id = (int) $_POST['id'];
         if ($id > 0) {
@@ -42,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . $base_url . 'includes/list_all_goups.php');
         exit;
     }
+    */
 
     if ($action === 'save' && isset($_POST['id'], $_POST['name'])) {
         $id = (int) $_POST['id'];
@@ -66,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// --- Entferne Confirm-Delete-GET-Block (keine Bestätigungsseite mehr nötig) ---
 // Wenn Confirm-GET gesetzt ist -> zeige PHP-Bestätigungsseite (kein JS-Dialog)
 if (isset($_GET['confirm_delete'])) {
     $confirm_id = (int)$_GET['confirm_delete'];
@@ -140,17 +143,14 @@ if ($result && mysqli_num_rows($result) > 0) {
       .last-entries { font-size:13px; border-collapse:collapse; }
       .last-entries th, .last-entries td { padding:4px 6px; line-height:1.05; vertical-align:middle; border:1px solid #ccc; }
       /* lange Gruppennamen nicht umbrechen, Ellipsis bei Überlauf */
-      .last-entries td:first-child, .last-entries th:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:70%; }
+      .last-entries td:first-child, .last-entries th:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:85%; }
       .last-entries td:nth-child(2), .last-entries th:nth-child(2) { width:15%; text-align:center; }
-      .last-entries td:nth-child(3), .last-entries th:nth-child(3) { width:15%; text-align:center; }
-      input[type="checkbox"] { transform: scale(0.95); vertical-align:middle; }
     </style>';
 
     echo "<table class='last-entries' style='table-layout: fixed; width: 100%;'>";
     echo "<tr>";
-    echo "<th style='width:70%;'>Gruppenname</th>";
+    echo "<th style='width:85%;'>Gruppenname</th>";
     echo "<th style='width:15%;'>Bearbeiten</th>";
-    echo "<th style='width:15%;'>Löschen</th>";
     echo "</tr>";
 
     while ($row = mysqli_fetch_assoc($result)) {
@@ -170,7 +170,6 @@ if ($result && mysqli_num_rows($result) > 0) {
                 </form>
               </td>";
             echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
-            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>-</td>";
         } else {
             // Anzeige mit Aktionen
             $display = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
@@ -180,12 +179,6 @@ if ($result && mysqli_num_rows($result) > 0) {
             $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_id=' . $id, ENT_QUOTES, 'UTF-8');
             echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
                 <a href='{$edit_url}' title='Bearbeiten' style='text-decoration:none;'>✏️</a>
-              </td>";
-
-            // Delete-Link: führt zur PHP-Bestätigungsseite (kein JS-Popup)
-            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete=' . $id, ENT_QUOTES, 'UTF-8');
-            echo "<td style='border:1px solid #ccc; padding:4px; text-align:center;'>
-                <a href='{$confirm_url}' title='Löschen' style='text-decoration:none;color:#900;'>🗑️</a>
               </td>";
         }
         echo "</tr>";

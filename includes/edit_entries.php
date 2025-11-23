@@ -296,7 +296,7 @@ if ($activeFilter === 'week' || $activeFilter === 'month') {
 }
 
 
-// Tabelle
+// Tabelle (ohne Checkboxen
 if ($result && mysqli_num_rows($result) > 0) {
     $columnConfig = [
         'datum'     => ['label' => 'Datum',     'width' => '50px'],   // schmaler
@@ -311,7 +311,6 @@ if ($result && mysqli_num_rows($result) > 0) {
     echo "<table style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
 
     echo "<tr>";
-    echo "<th style='width:30px; border: 1px solid #ccc;'>🗑️</th>";
     echo "<th style='width:120px; border: 1px solid #ccc;'>Bearbeiten</th>";
     foreach ($columnConfig as $key => $config) {
         echo "<th style='width:{$config['width']}; border: 1px solid #ccc;'>{$config['label']}</th>";

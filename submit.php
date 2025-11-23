@@ -14,8 +14,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 global $hesk_settings;
-$table = $hesk_settings['db_hb_pfix'] . 'hallenbuch';
-//$mysqli->set_charset('utf8mb4');
+// sichere Tabellennamen (nur A-Z a-z 0-9 _ erlauben)
+$table = preg_replace('/[^A-Za-z0-9_]/', '', ($hesk_settings['db_hb_pfix'] ?? '') . 'hallenbuch');
 
 // Eintragszähler initialisieren
 if (!isset($_SESSION['entry_count'])) {
@@ -162,9 +162,12 @@ if (!$conn) {
     exit;
 }
 
+// stellen Sie sicher, dass die Verbindung UTF-8 nutzt
+mysqli_set_charset($conn, 'utf8mb4');
+
 // SQL vorbereiten
 $stmt = mysqli_prepare($conn, "
-    INSERT INTO $table (datum, von, bis, gruppe, trainer, vermerk, bemerkung)
+    INSERT INTO `{$table}` (datum, von, bis, gruppe, trainer, vermerk, bemerkung)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
 

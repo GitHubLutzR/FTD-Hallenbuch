@@ -56,21 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if ($action === 'delete' && isset($_POST['trname'], $_POST['gruppe_id'])) {
-        $trname = trim($_POST['trname']);
-        $gid = (int)$_POST['gruppe_id'];
-        if ($trname !== '' && $gid > 0) {
-            $stmt = mysqli_prepare($conn, "DELETE FROM `{$trainer_table}` WHERE trname = ? AND gruppe_id = ? LIMIT 1");
-            if ($stmt) {
-                mysqli_stmt_bind_param($stmt, 'si', $trname, $gid);
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
-            }
-        }
-        header('Location: ' . $self );
-        exit;
-    }
-
     if ($action === 'cancel') {
         header('Location: ' . $self );
         exit;
@@ -243,7 +228,6 @@ if ($res && mysqli_num_rows($res) > 0) {
     echo "<th style='border:1px solid #ccc; padding:6px;'><a href=\"{$link_group}\">Gruppe{$arrow_group}</a></th>";
 
     echo "<th style='border:1px solid #ccc; padding:6px;'>Bearbeiten</th>";
-    echo "<th style='border:1px solid #ccc; padding:6px;'>Löschen</th>";
     echo "</tr>";
 
     while ($row = mysqli_fetch_assoc($res)) {
@@ -290,8 +274,6 @@ if ($res && mysqli_num_rows($res) > 0) {
             echo "<td style='border:1px solid #ccc; padding:6px;'>{$display_group}</td>";
             $edit_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?edit_trname=' . urlencode($trname) . '&edit_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
             echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$edit_url}' title='Bearbeiten'>✏️</a></td>";
-            $confirm_url = htmlspecialchars($_SERVER['PHP_SELF'] . '?confirm_delete_trname=' . urlencode($trname) . '&confirm_delete_gid=' . $gid . ($filter_gid ? '&filter_gid=' . (int)$filter_gid : ''), ENT_QUOTES, 'UTF-8');
-            echo "<td style='border:1px solid #ccc; padding:6px; text-align:center;'><a href='{$confirm_url}' title='Löschen' style='color:#900;'>🗑️</a></td>";
         }
         echo "</tr>";
     }
