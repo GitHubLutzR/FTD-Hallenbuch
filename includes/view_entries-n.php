@@ -1,6 +1,5 @@
 <?php
 require_once(__DIR__ . '/../config.php');
-#require_once(__DIR__ . '/../include.php');
 require_once(__DIR__ . '/../include_public.php');
 // Debug aktivieren (nur wenn Debug-Flag gesetzt)
 if (!empty($hesk_settings['debug'])) {
@@ -93,46 +92,6 @@ if ($activeFilter === 'month') {
     }
 }
 
-//// Löschvorgang
-//if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
-//    $idsToDelete = array_map('intval', $_POST['delete_ids']);
-//    if (!empty($idsToDelete)) {
-//        $idList = implode(',', $idsToDelete);
-//        $deleteSql = "DELETE FROM $table WHERE id IN ($idList)";
-//        mysqli_query($conn, $deleteSql);
-//    }
-//}
-
-//// --- NEU: Inline-Edit speichern ---
-//if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save' && isset($_POST['id'])) {
-//    $id = (int)$_POST['id'];
-//    // sanitize inputs
-//    $datum     = mysqli_real_escape_string($conn, trim($_POST['datum'] ?? ''));
-//    $von       = mysqli_real_escape_string($conn, trim($_POST['von'] ?? ''));
- //   $bis       = mysqli_real_escape_string($conn, trim($_POST['bis'] ?? ''));
-//    $gruppe    = mysqli_real_escape_string($conn, trim($_POST['gruppe'] ?? ''));
-//    $trainer   = mysqli_real_escape_string($conn, trim($_POST['trainer'] ?? ''));
-//    $bemerkung = htmlentities(trim($_POST['bemerkung'] ?? ''), ENT_QUOTES, 'UTF-8');
-//
-//    $updateSql = "
-//      UPDATE $table
-//      SET datum = '$datum',
-//          von = '$von',
-//          bis = '$bis',
-//          gruppe = '$gruppe',
-//          trainer = '$trainer',
-//          bemerkung = '$bemerkung'
-//      WHERE id = $id
-//      LIMIT 1
-//    ";
-//    mysqli_query($conn, $updateSql);
-//
-//    // Redirect to avoid repost
-//    header('Location: ' . $_SERVER['PHP_SELF']);
-//    exit;
-//}
-//// --- ENDE Inline-Edit speichern ---
-
 // Einträge abrufen
 $limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
 $sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limitClause";
@@ -193,7 +152,7 @@ for ($i = 0; $i < 8; $i++) {
 echo "</select>";
 
 // Gruppenfilter 
-echo "<label for='filter_month'>Gruppenfilter:</label>";
+echo "<label for='filter_group'>Gruppenfilter:</label>";
 echo "<select name='filter_group' id='filter_group'>";
 echo "<option value=''>–</option>";
 //////////////////########
@@ -219,31 +178,10 @@ $all_groups = array_values(array_keys($all_set));
 foreach ($all_groups as $value) {
     echo "<option value='$value'>$value</option>";
 }
+echo "<select name='filter_group' id='filter_group' onchange='this.form.submit()'>";
 echo "</select>";
-
-///////////////////////////
-//$safe_trtable = preg_replace('/[^A-Za-z0-9_]/', '', $trtable);
-//$gtq = "SELECT trname, gruppe_id FROM `{$safe_trtable}` ORDER BY trname ASC";
-//$gtr = mysqli_query($conn, $gtq);
-//$group_trainers = [];
-//$all_set = [];
-//if ($gtr) {
-//    while ($r = mysqli_fetch_assoc($gtr)) {
-//        // decode HTML entities from DB, trim and skip empty names
-//        $raw = $r['trname'] ?? '';
-//        $name = trim(html_entity_decode($raw, ENT_QUOTES, 'UTF-8'));
-//        if ($name === '') continue;
-//        $gid  = (int)($r['gruppe_id'] ?? 0);
-//        $group_trainers[$gid][] = $name;
-//        $all_set[$name] = true;
-//    }
-//}
-//$all_trainers = array_values(array_keys($all_set));
-//foreach ($all_trainers as $value) {
-//    echo "<option value='$value'>$value</option>";
-//}
-//echo "</select>";
 ////////////////////////////////
+
 // Filter aufheben
 if ($activeFilter) {
     echo "<a href='" . htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') . "' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
@@ -260,6 +198,7 @@ echo <<<'JS'
     var date = f.querySelector('input[name="filter_date"]');
     var week = f.querySelector('select[name="filter_week"]');
     var month = f.querySelector('select[name="filter_month"]');
+    var group = f.querySelector('select[name="filter_group"]');
     var limit = f.querySelector('select[name="limit"]') || document.getElementById('limitSelect');
 
     function clearDate(){ if (date) { date.value = ''; } }
