@@ -9,7 +9,10 @@ dirs=("" "includes" "admin")
 TARGET_ROOT=${ONLINE_DIR}
 TARGET_USER="www-data:"
 scp $SOURCE_ROOT/includes/view_entries-n.php 217.160.3.116:/home/risse/HESK/hallenbuch/includes/view_entries.php
-cp $SOURCE_ROOT/includes/view_entries-n.php $SOURCE_ROOT/ignored/view_entries_for_chat.txt 
+#geht eh nicht#sed -e 's/</\&lt;/g' -e 's/>/\&gt;/g' \
+#geht eh nicht#    $SOURCE_ROOT/includes/view_entries-n.php > $SOURCE_ROOT/ignored/view_entries_for_chat.txt 
+#geht eh nicht#    #view_entries.php > view_entries.safe.php
+#geht eh nicht#zip $SOURCE_ROOT/ignored/upload.zip $SOURCE_ROOT/ignored/view_entries_for_chat.txt
 exit 0
  for dir in "${dirs[@]}"; do
   if ls "$SOURCE_ROOT/$dir"/*.php >/dev/null 2>&1; then
