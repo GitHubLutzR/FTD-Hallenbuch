@@ -11,6 +11,7 @@ fi
 # kopiert die php.txt Dateien vom Repo ins html-Verzeichnis und benennt sie als php Dateien.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_ROOT="$(dirname "$SCRIPT_DIR")"
+ONLINE_DIR="/home/risse/HESK/hallenbuch/"
 #GIT_ROOT="$(dirname "$REPO_ROOT")"
 dirs=("" "includes" "admin")
 # für lokale TEST wird bei ''./<script.sh> l' das lokale TARTGET_ROOT gesetzt
@@ -23,7 +24,7 @@ if [ "$1" = "l" ]; then
   fi
   TARGET_USER="root:daemon"
 elif [ "$1" = "o" ]; then
-  TARGET_ROOT="$(dirname "$SCRIPT_DIR"|sed 's@git/FTD-Hallenbuch@HESK/hallenbuch@g')"
+  TARGET_ROOT=${ONLINE_DIR}
   if [ "$SOURCE_ROOT" = "$TARGET_ROOT" ]; then
 	  echo "Fehler beim Aufruf (SOURCE_ROOT und TARGET_ROOT), auf dem richtigen Server?" >&2
     exit 1
