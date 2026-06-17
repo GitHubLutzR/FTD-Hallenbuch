@@ -92,10 +92,26 @@ if ($activeFilter === 'month') {
         $dateCondition = "WHERE datum = '$formattedDate'";
     }
 }
+// Gruppenname ermitteln
+if ($selectedGroup !== '') {
+    $safeGroupId = intval($selectedGroup);
+    $groupQuery = "SELECT name FROM `{$grtable}` WHERE id = $safeGroupId LIMIT 1";
+    $groupResult = mysqli_query($conn, $groupQuery);
+    if ($groupResult && mysqli_num_rows($groupResult) > 0) {
+        $groupRow = mysqli_fetch_assoc($groupResult);
+        $groupName = htmlspecialchars(html_entity_decode($groupRow['name'], ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        // Erweiterung der SQL-Bedingung um die Gruppenfilterung
+        $dateCondition .= ($dateCondition ? " AND " : "WHERE ") . "gruppe LIKE '%" . mysqli_real_escape_string($conn, $groupName) . "%'";
+    } else {
+        // Falls die Gruppe nicht gefunden wird, sicherheitshalber keine Ergebnisse anzeigen
+        $dateCondition .= ($dateCondition ? " AND " : "WHERE ") . "1=0";
+    }
+}
 
 // Einträge abrufen
 $limitClause = ($selectedLimit === 'ALLE') ? '' : "LIMIT " . intval($selectedLimit);
 $sql = "SELECT * FROM $table $dateCondition ORDER BY datum DESC, von DESC $limitClause";
+//DEBUG only//echo "SQL: $sql;  <br>"; // Debug-Ausgabe der finalen SQL-Query
 $result = mysqli_query($conn, $sql);
 
 // Datum zurück / vor berechnen
@@ -153,7 +169,6 @@ for ($i = 0; $i < 8; $i++) {
 echo "</select>";
 
 // Gruppenfilter 
-//////////////////########
 echo "<label for='filter_group'>Gruppenfilter:</label>";
 echo "<select name='filter_group' id='filter_group' onchange='this.form.submit()'>";
 echo "<option value=''>–</option>";
@@ -174,38 +189,10 @@ if ($grresult === false) {
     }
 }
 echo "</select>";
-/////Chat End/////
-//echo "<label for='filter_group'>Gruppenfilter:</label>";
-//echo "<select name='filter_group' id='filter_group'>";
-//echo "<option value=''>–</option>";
-//$safe_grtable = preg_replace('/[^A-Za-z0-9_]/', '', $grtable);
-//$query_gr = "SELECT id, name FROM `{$safe_grtable}` ORDER BY  name ASC";
-//$grresult = mysqli_query($conn, $query_gr);
-////$group_trainers = [];
-//$all_set = [];
-//if ($grresult === false) {
-//    echo "<option value=''>Fehler beim Laden der Gruppen</option>";
-//    echo "<!-- QUERY ERROR: " . htmlspecialchars(mysqli_error($conn), ENT_QUOTES, 'UTF-8') . " -->";
-//} else {
-//    while ($row = mysqli_fetch_assoc($grresult)) {
-//        $id = (int) $row['id'];
-//        // decode entities from DB then escape for safe HTML output
-//        $rawName = $row['name'] ?? '';
-//        $decodedName = html_entity_decode($rawName, ENT_QUOTES, 'UTF-8');
-//        $safeName = htmlspecialchars($decodedName, ENT_QUOTES, 'UTF-8');
-//        echo "<option value=\"$id\">$safeName</option>";
-//    }
-//}
-//$all_groups = array_values(array_keys($all_set));
-//foreach ($all_groups as $value) {
-//    echo "<option value='$value'>$value</option>";
-//}
-//echo "<select name='filter_group' id='filter_group' onchange='this.form.submit()'>";
-//echo "</select>";
-////////////////////////////////
 
 // Filter aufheben
-if ($activeFilter) {
+//if ($activeFilter) {
+if ($activeFilter || $selectedGroup !== '') {
     echo "<a href='" . htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') . "' style='padding: 4px 8px; border: 1px solid #ccc; background-color: #eee;'>Filter aufheben</a>";
 }
 
