@@ -314,6 +314,18 @@ if ($result && mysqli_num_rows($result) > 0) {
         'bemerkung' => ['label' => 'Bemerkung', 'width' => '200px']
     ];
 
+    $totalDurationMinutes = 0; // line 311
+    $parseTime = function ($time) { // line 312
+        if (!$time) {
+            return false;
+        }
+        $dt = DateTime::createFromFormat('H:i:s', $time);
+        if (!$dt) {
+            $dt = DateTime::createFromFormat('H:i', $time);
+        }
+        return $dt ?: false;
+    }; // line 320
+
     echo "<table style='table-layout: fixed; width: 100%; border-collapse: collapse;'>";
 
     echo "<tr>";
@@ -330,6 +342,14 @@ if ($result && mysqli_num_rows($result) > 0) {
 
     while ($row = mysqli_fetch_assoc($result)) {
         $rowId = (int)$row['id'];
+        $start = $parseTime($row['von'] ?? ''); // line 328
+        $end   = $parseTime($row['bis'] ?? ''); // line 329
+        if ($start && $end) { // line 330
+            if ($end <= $start) { // line 331
+                $end->modify('+1 day'); // line 332
+            }
+            $totalDurationMinutes += (int) floor(($end->getTimestamp() - $start->getTimestamp()) / 60); // line 333
+        }
 
         // If this row is being edited, render a single TR that contains the form
         if ($editId === $rowId) {
@@ -440,6 +460,9 @@ if ($result && mysqli_num_rows($result) > 0) {
     }
 
     echo "</table>";
+    $totalHours   = intdiv($totalDurationMinutes, 60); // line 438
+    $totalMinutes = $totalDurationMinutes % 60; // line 439
+    echo "<div style='margin-top:12px;font-weight:600;'>Gesamtdauer: {$totalHours} h {$totalMinutes} min</div>"; // line 440
 } else {
     echo "<p>Keine Einträge gefunden.</p>";
 }
