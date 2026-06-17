@@ -9,6 +9,7 @@ dirs=("" "includes" "admin")
 TARGET_ROOT=${ONLINE_DIR}
 TARGET_USER="www-data:"
 scp $SOURCE_ROOT/includes/view_entries-n.php 217.160.3.116:/home/risse/HESK/hallenbuch/includes/view_entries.php
+scp $SOURCE_ROOT/includes/export-n.php 217.160.3.116:/home/risse/HESK/hallenbuch/includes/export.php
 #geht eh nicht#sed -e 's/</\&lt;/g' -e 's/>/\&gt;/g' \
 #geht eh nicht#    $SOURCE_ROOT/includes/view_entries-n.php > $SOURCE_ROOT/ignored/view_entries_for_chat.txt 
 #geht eh nicht#    #view_entries.php > view_entries.safe.php
