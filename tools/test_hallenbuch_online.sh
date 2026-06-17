@@ -14,6 +14,9 @@ scp $SOURCE_ROOT/includes/export-n.php 217.160.3.116:/home/risse/HESK/hallenbuch
 #geht eh nicht#    $SOURCE_ROOT/includes/view_entries-n.php > $SOURCE_ROOT/ignored/view_entries_for_chat.txt 
 #geht eh nicht#    #view_entries.php > view_entries.safe.php
 #geht eh nicht#zip $SOURCE_ROOT/ignored/upload.zip $SOURCE_ROOT/ignored/view_entries_for_chat.txt
+scp $SOURCE_ROOT/includes/view_entries-n.php 87.106.47.50:/home/risse/HESK/view_entries.php
+scp $SOURCE_ROOT/includes/export-n.php 87.106.47.50:/home/risse/HESK/export.php
+ssh 87.106.47.50 "sudo mv /home/risse/HESK/view_entries.php /home/risse/HESK/export.php /home/risse/HESK/hallenbuch/includes/ && sudo chown www-data: /home/risse/HESK/hallenbuch/includes/*"
 exit 0
  for dir in "${dirs[@]}"; do
   if ls "$SOURCE_ROOT/$dir"/*.php >/dev/null 2>&1; then

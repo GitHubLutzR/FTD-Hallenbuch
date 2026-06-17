@@ -295,14 +295,24 @@ if (array_key_exists('filter_week', $_GET) && $_GET['filter_week'] !== '') {
     $activeFilter = 'date';
 }
 
-if ($activeFilter === 'week' || $activeFilter === 'month') {
+//if ($activeFilter === 'month') {
+////if ($activeFilter === 'week' || $activeFilter === 'month') {
+//    $qs = $_GET;
+//    unset($qs['edit_id'], $qs['limit']); // nicht forwarden
+//    $export_url = '/hallenbuch/includes/export.php' . (!empty($qs) ? ('?' . http_build_query($qs)) : '');
+//    echo "<div style='margin:10px 0 14px;'><a href='" . htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8') . "' style='padding:6px 10px;background:#2b7cff;color:#fff;text-decoration:none;border-radius:4px;'>PDF exportieren (aktuelle Filter)</a></div>";
+//}
+if ($activeFilter === 'month') {
     $qs = $_GET;
     unset($qs['edit_id'], $qs['limit']); // nicht forwarden
     $export_url = '/hallenbuch/includes/export.php' . (!empty($qs) ? ('?' . http_build_query($qs)) : '');
-    echo "<div style='margin:10px 0 14px;'><a href='" . htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8') . "' style='padding:6px 10px;background:#2b7cff;color:#fff;text-decoration:none;border-radius:4px;'>PDF exportieren (aktuelle Filter)</a></div>";
+    $export_url_esc = htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8');
+
+    // öffnet in neuem Fenster und fokussiert es
+    echo '<div style="margin:10px 0 14px;">'
+       . '<a href="' . $export_url_esc . '" onclick="var w=window.open(\'' . $export_url_esc . '\',\'_blank\',\'width=1000,height=700,scrollbars=yes\'); if(w){ try{ w.focus(); }catch(e){} } return false;" style="padding:6px 10px;background:#2b7cff;color:#fff;text-decoration:none;border-radius:4px;">PDF exportieren (aktuelle Filter)</a>'
+       . '</div>';
 }
-
-
 // Tabelle
 if ($result && mysqli_num_rows($result) > 0) {
     $columnConfig = [

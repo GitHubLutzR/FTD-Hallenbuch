@@ -97,32 +97,38 @@ if (array_key_exists('filter_date', $_GET) && $_GET['filter_date'] !== '') {
 
 // Baue SQL entsprechend dem aktiven Filter (kein LIMIT – exportiere alle Treffer)
 $dateCondition = '';
-if ($activeFilter === 'month') {
-    // akzeptiere "YYYY-MM" oder "MM"
-    if (preg_match('/^(\d{4})-(\d{1,2})$/', $selectedMonth, $mm)) {
-        $y = (int)$mm[1];
-        $m = (int)$mm[2];
+//if ($activeFilter === 'month') {
+//    // akzeptiere "YYYY-MM" oder "MM"
+//  if (preg_match('/^(\d{4})-(\d{1,2})$/', $selectedMonth, $mm)) {
+//      $y = (int)$mm[1];
+//      $m = (int)$mm[2];
+//  } else {
+//      $m = intval($selectedMonth);
+//      $y = date('Y');
+//  }
+//  if ($m >= 1 && $m <= 12) {
+//      $dateCondition = "WHERE MONTH(datum) = {$m} AND YEAR(datum) = {$y}";
+//  } else {
+//      // ungültiger Monatswert -> keine Trefferbedingung (oder optional: Abbruch)
+//      $dateCondition = '';
+//  }
+    if ( $selectedMonth > date('n')) {
+      $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . (date('Y') - 1);
+      //$dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y') -1 ;
     } else {
-        $m = intval($selectedMonth);
-        $y = date('Y');
+      $dateCondition = "WHERE MONTH(datum) = " . intval($selectedMonth) . " AND YEAR(datum) = " . date('Y');
     }
-    if ($m >= 1 && $m <= 12) {
-        $dateCondition = "WHERE MONTH(datum) = {$m} AND YEAR(datum) = {$y}";
-    } else {
-        // ungültiger Monatswert -> keine Trefferbedingung (oder optional: Abbruch)
-        $dateCondition = '';
-    }
-} elseif ($activeFilter === 'week') {
-    $w = intval($selectedWeek);
-    $y = date('Y');
-    $dateCondition = "WHERE WEEK(datum, 1) = {$w} AND YEAR(datum) = {$y}";
-} elseif ($activeFilter === 'date') {
-    $dObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
-    if ($dObj) {
-        $d = $dObj->format('Y-m-d');
-        $dateCondition = "WHERE datum = '{$d}'";
-    }
-}
+//} elseif ($activeFilter === 'week') {
+//    $w = intval($selectedWeek);
+//    $y = date('Y');
+//    $dateCondition = "WHERE WEEK(datum, 1) = {$w} AND YEAR(datum) = {$y}";
+//} elseif ($activeFilter === 'date') {
+//    $dObj = DateTime::createFromFormat('Y-m-d', $selectedDate);
+//    if ($dObj) {
+//        $d = $dObj->format('Y-m-d');
+//        $dateCondition = "WHERE datum = '{$d}'";
+//    }
+//}
 $groupCondition = '';
 if ($selectedGroup !== '') {
     $groupName = '';
@@ -198,7 +204,11 @@ if ($activeFilter === 'date' && !empty($selectedDate)) {
         $titleFilter = DateTime::createFromFormat('!m', $m[2])->format('F') . ' ' . $m[1];
     } else {
         $mnum = intval($selectedMonth);
-        $titleFilter = DateTime::createFromFormat('!m', $mnum)->format('F') . ' ' . date('Y');
+        if ( $selectedMonth > date('n')) {
+          $titleFilter = DateTime::createFromFormat('!m', $mnum)->format('F') . ' ' . date('Y') - 1;
+        } else {
+          $titleFilter = DateTime::createFromFormat('!m', $mnum)->format('F') . ' ' . date('Y');
+        }
     }
 }
 
@@ -215,6 +225,7 @@ $conv = function($s){
 $pdf->SetFont('Arial', 'B', 14);
 $titleIso = $conv($titleFilter);
 $pdf->Cell(0, 10, 'Hallenbuch-Export: ' . ucfirst($titleIso), 0, 1, 'C');
+//$pdf->Cell(0, 10, 'SQL: ' . ucfirst($sql), 0, 1, 'C');
 $pdf->Ln(4);
 
 // Tabellen-Header
